@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/zsh
 set -euo pipefail  # Exit on error, undefined vars, and pipeline failures
 IFS=$'\n\t'       # Stricter word splitting
 
@@ -146,3 +146,5 @@ fi
 
 chown -R tochijihai /commandhistory
 chown -R tochijihai:tochijihai /usr/local/share /home/tochijihai/.claude /workspaces
+
+npm install -g @anthropic-ai/claude-code

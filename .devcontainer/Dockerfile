@@ -1,35 +1,54 @@
-FROM buildpack-deps:bullseye
+FROM node:24-alpine as node
+FROM python:3.13-alpine as python
+FROM golang:1.24-alpine as golang
+FROM alpine
 
-ARG TZ
-ENV TZ=$TZ
-
-ENV USERNAME=tochijihai
-ARG UID=1000
-ARG GID=$UID
-
-RUN groupadd --gid $GID $USERNAME \
-  && useradd --uid $UID --gid $GID --shell /bin/bash --create-home $USERNAME
-
-# Install basic development tools and iptables/ipset
-RUN apt update && apt install -y less \
+# Install 適当 pkg and iptables/ipset
+RUN apk update && apk add --no-cache \
+  less \
   git \
+  curl \
   procps \
   sudo \
+  dpkg \
   fzf \
+  bash \
   zsh \
+  zsh-autosuggestions \
+  zsh-syntax-highlighting \
   man-db \
   unzip \
-  gnupg2 \
   iptables \
   ipset \
   iproute2 \
-  dnsutils \
   jq \
-  locales
+  delta \
+  aws-cli
 
-RUN sed -i -e 's/# \(ja_JP.UTF-8\)/\1/' /etc/locale.gen && \
-  locale-gen ja_JP.UTF-8 && \
-  update-locale LANG=ja_JP.UTF-8
+# Add non-root user
+ENV USERNAME tochijihai
+
+RUN addgroup -S $USERNAME \
+  && adduser -S $USERNAME -G $USERNAME \
+  && echo "${USERNAME} ALL=(ALL) NOPASSWD:ALL" >> /etc/sudoers 
+
+# Install node
+COPY --from=node /usr/local/bin /usr/local/bin
+COPY --from=node /usr/local/lib/node_modules/npm /usr/local/lib/node_modules/npm
+COPY --from=node /opt/yarn* /opt/yarn
+RUN ln -fs /opt/yarn/bin/yarn /usr/local/bin/yarn && \
+  ln -fs /opt/yarn/bin/yarnpkg /usr/local/bin/yarnpkg
+
+# Install python
+RUN apk add --no-cache expat
+
+COPY --from=python /usr/local/bin /usr/local/bin
+COPY --from=python /usr/local/lib /usr/local/lib
+COPY --from=python /usr/local/include /usr/local/include
+
+# Install golang
+COPY --from=golang /usr/local/go /usr/local/go
+ENV PATH $PATH:/usr/local/go/bin/
 
 # Persist bash history.
 ENV SNIPPET="export PROMPT_COMMAND='history -a' && export HISTFILE=/commandhistory/.bash_history"
@@ -44,51 +63,18 @@ ENV DEVCONTAINER=true
 RUN mkdir -p /workspaces /home/$USERNAME/.claude && \
   chown -R $USERNAME:$USERNAME /workspaces /home/$USERNAME/.claude
 
-RUN ARCH=$(dpkg --print-architecture) && \
-  wget "https://github.com/dandavison/delta/releases/download/0.18.2/git-delta_0.18.2_${ARCH}.deb" && \
-  sudo dpkg -i "git-delta_0.18.2_${ARCH}.deb" && \
-  rm "git-delta_0.18.2_${ARCH}.deb"
-
 # Set up non-root user
 USER $USERNAME
 
+# Set up zsh 
 ENV SHELL=/bin/zsh
+RUN sh -c "$(wget https://raw.github.com/robbyrussell/oh-my-zsh/master/tools/install.sh -O -)"
+RUN echo "source /usr/share/zsh/plugins/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh" >> ~/.zshrc && \
+  echo "source /usr/share/zsh/plugins/zsh-autosuggestions/zsh-autosuggestions.zsh" >> ~/.zshrc
 
-# Default powerline10k theme
-RUN sh -c "$(wget -O- https://github.com/deluan/zsh-in-docker/releases/download/v1.2.0/zsh-in-docker.sh)" -- \
-  -p git \
-  -p fzf \
-  -a "source /usr/share/doc/fzf/examples/key-bindings.zsh" \
-  -a "source /usr/share/doc/fzf/examples/completion.zsh" \
-  -a "$SNIPPET" \
-  -x
-
-# ARG ZSH="~/${USERNAME}/.zshrc"
-
-# RUN if grep -q '^export LANG=' $ZSH; then \
-#   sed -i 's|^export LANG=.*|export LANG=ja_JP.UTF-8|' $ZSH \
-#   else \
-#   echo 'export LANG=ja_JP.UTF-8' >> $ZSH \
-#   fi
-
-# RUN if grep -q '^export LANGUAGE==' $ZSH; then \
-#   sed -i 's|^export LANGUAGE==.*|export LANGUAGE==ja_JP:ja|' $ZSH \
-#   else \
-#   echo 'export LANGUAGE==ja_JP:ja' >> $ZSH \
-#   fi
-
-# RUN if grep -q '^export LC_ALL==' $ZSH; then \
-#   sed -i 's|^export LC_ALL==.*|export LC_ALL==ja_JP.UTF-8|' $ZSH \
-#   else \
-#   echo 'export LC_ALL==ja_JP.UTF-8' >> $ZSH \
-#   fi
-
-# RUN source $ZSH
-
-# Copy and set up script
 COPY init.sh /usr/local/bin/
 USER root
-RUN chmod +x /usr/local/bin/init.sh && \
-  echo "${USERNAME} ALL=(root) NOPASSWD: /usr/local/bin/init.sh" > /etc/sudoers.d/firewall && \
-  chmod 0440 /etc/sudoers.d/firewall
-USER $USERNAME
+RUN chmod +x /usr/local/bin/init.sh
+
+# Clean up
+RUN rm -rf /var/cache/apk/*
