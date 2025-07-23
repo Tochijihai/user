@@ -39,6 +39,8 @@
 		"react-native-webview": "13.13.5"
 	},
 	"devDependencies": {
+		"@aws-amplify/backend": "^1.16.1",
+		"@aws-amplify/backend-cli": "^1.8.0",
 		"@babel/core": "^7.25.2",
 		"@biomejs/biome": "^2.1.2",
 		"@types/react": "~19.0.10",
