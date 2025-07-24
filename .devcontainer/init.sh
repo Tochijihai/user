@@ -67,6 +67,23 @@ while read -r cidr; do
     fi
 done < <(echo "$gh_ranges" | jq -r '(.web + .api + .git)[]' | sort -u)
 
+# Fetch AWS ip-ranges and aggregate + add their IP ranges
+echo "Fetching AWS IP ranges (IPv4 only, ap-northeast-1 only)..."
+aws_ranges=$(curl -s https://ip-ranges.amazonaws.com/ip-ranges.json)
+
+if [ -z "$aws_ranges" ]; then
+    echo "ERROR: Failed to fetch AWS IP ranges"
+    exit 1
+fi
+
+echo "$aws_ranges" | jq -r '
+  .prefixes[] |
+  select(.region == "ap-northeast-1") |
+  .ip_prefix' | while read -r cidr; do
+    echo "Adding AWS IPv4 CIDR $cidr"
+    ipset add allowed-domains "$cidr" -exist
+done
+
 # Resolve and add other allowed domains (IPv4 only)
 for domain in \
     "registry.npmjs.org" \
