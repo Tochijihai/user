@@ -29,8 +29,8 @@ RUN apk update && apk add --no-cache \
 ENV USERNAME tochijihai
 
 RUN addgroup -S $USERNAME \
-  && adduser -S $USERNAME -G $USERNAME \
-  && echo "${USERNAME} ALL=(ALL) NOPASSWD:ALL" >> /etc/sudoers 
+  && adduser -S $USERNAME -G $USERNAME
+# && echo "${USERNAME} ALL=(ALL) NOPASSWD:ALL" >> /etc/sudoers 
 
 # Install node
 COPY --from=node /usr/local/bin /usr/local/bin
@@ -74,7 +74,9 @@ RUN echo "source /usr/share/zsh/plugins/zsh-syntax-highlighting/zsh-syntax-highl
 
 COPY init.sh /usr/local/bin/
 USER root
-RUN chmod +x /usr/local/bin/init.sh
+RUN chmod +x /usr/local/bin/init.sh && \
+  echo "${USERNAME} ALL=(root) NOPASSWD: /usr/local/bin/init.sh" > /etc/sudoers.d/init && \
+  chmod 0440 /etc/sudoers.d/init
 
 # Clean up
 RUN rm -rf /var/cache/apk/*
