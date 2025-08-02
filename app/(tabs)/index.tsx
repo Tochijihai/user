@@ -3,10 +3,32 @@ import React, { useEffect, useState } from "react";
 import { ActivityIndicator, StyleSheet, Text, View } from "react-native";
 import MapView, { Marker, PROVIDER_GOOGLE } from "react-native-maps";
 
+type Spot = {
+	latitude: number;
+	longitude: number;
+	title?: string;
+	description?: string;
+};
+
+const spots: Spot[] = [
+	{
+		latitude: 35.6764217,
+		longitude: 139.6500267,
+		title: "てすと１",
+		description: "てすと１",
+	},
+	{
+		latitude: 35.6765217,
+		longitude: 139.6510367,
+		title: "てすと２",
+		description: "てすと２",
+	},
+];
 export default function LocationMap() {
 	const [location, setLocation] = useState<Location.LocationObject | null>(
 		null,
 	);
+	const [posts, setPosts] = useState<Spot[] | null>(null);
 
 	useEffect(() => {
 		(async () => {
@@ -19,6 +41,9 @@ export default function LocationMap() {
 			// 現在地を取得
 			const loc = await Location.getCurrentPositionAsync({});
 			setLocation(loc);
+
+			// TODO: 投稿取得API
+			setPosts(spots);
 		})();
 	}, []);
 
@@ -42,14 +67,20 @@ export default function LocationMap() {
 				longitudeDelta: 0.01,
 			}}
 		>
-			<Marker
-				coordinate={{
-					latitude: location.coords.latitude,
-					longitude: location.coords.longitude,
-				}}
-				title="現在地"
-				description="ここにいます"
-			/>
+			{posts
+				? posts.map((post, idx) => (
+						<Marker
+							key={`${post.latitude}-${post.longitude}-${idx}`}
+							coordinate={{
+								latitude: post.latitude,
+								longitude: post.longitude,
+							}}
+							title={post.title}
+							description={post.description}
+							image={require("../../assets/images/post.png")}
+						/>
+					))
+				: null}
 		</MapView>
 	);
 }
