@@ -16,6 +16,31 @@ class UserApiClient {
 		};
 	}
 
+	// GETメソッド
+	public async get<T>(path: string): Promise<ApiResponse<T>> {
+		try {
+			const response = await fetch(`${this.baseURL}${path}`, {
+				method: "GET",
+				headers: this.headers,
+			});
+
+			if (!response.ok) {
+				// TODO: 正式なエラーハンドリング
+				throw new Error(`Request failed with status: ${response.status}`);
+			}
+
+			// レスポンスの空判定チェック用テキスト
+			const responseText = await response.text();
+
+			return {
+				statusCode: response.status,
+				body: responseText ? await response.json() : undefined, // レスポンスをJSONとしてパース
+			};
+		} catch (error) {
+			console.error("API call error:", error);
+			throw error;
+		}
+	}
 	// POSTメソッド。body と response の型を動的に設定
 	public async post<T, S>(path: string, body?: S): Promise<ApiResponse<T>> {
 		try {

@@ -11,6 +11,7 @@ import {
 	TextInput,
 } from "react-native-paper";
 import LocationMap from "@/components/LocationMap";
+import { Colors } from "@/constants/Colors"; // Colors.tsをインポート
 import { userApiClient } from "../apiClients/UserApiClient";
 
 export default function OpinionScreen() {
@@ -109,20 +110,26 @@ export default function OpinionScreen() {
 }
 
 const styles = StyleSheet.create({
-	container: { flex: 1 },
+	container: {
+		flex: 1,
+		backgroundColor: Colors.light.background, // 背景色を設定
+	},
 	mapContainer: { flex: 2 },
 	formContainer: {
 		flex: 1,
 		margin: 16,
 		justifyContent: "center",
+		backgroundColor: Colors.light.background, // フォームの背景色を設定
 	},
 	input: {
 		marginBottom: 16,
 		height: 100,
 		textAlignVertical: "top",
+		color: Colors.light.text, // テキスト色を設定
 	},
 	button: {
 		marginTop: 8,
+		backgroundColor: Colors.light.tint, // ボタンの色を設定
 	},
 	center: {
 		flex: 1,
