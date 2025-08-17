@@ -4,7 +4,7 @@ export type ApiResponse<T> = {
 	body?: T;
 };
 
-class UserBackendApiClient {
+class UserApiClient {
 	private baseURL: string;
 	private headers: HeadersInit;
 
@@ -45,7 +45,7 @@ class UserBackendApiClient {
 }
 
 // インスタンスをエクスポート
-export const userBackendApiClient = new UserBackendApiClient(
+export const userApiClient = new UserApiClient(
 	process.env.API_BASE_URL ??
 		"https://inyzdjntkl.execute-api.ap-northeast-1.amazonaws.com/dev",
 );

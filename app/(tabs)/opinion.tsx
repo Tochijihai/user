@@ -11,7 +11,7 @@ import {
 	TextInput,
 } from "react-native-paper";
 import LocationMap from "@/components/LocationMap";
-import { userBackendApiClient } from "../apiClients/UserBackendApiClient";
+import { userApiClient } from "../apiClients/UserApiClient";
 
 export default function OpinionScreen() {
 	const [location, setLocation] = useState<Location.LocationObject | null>(
@@ -49,7 +49,7 @@ export default function OpinionScreen() {
 				opinion: feedback,
 			};
 
-			const success = await userBackendApiClient.post("/user/opinions", body);
+			const success = await userApiClient.post("/user/opinions", body);
 			console.log("success:", success);
 			alert("意見を送信しました！");
 			setFeedback("");
