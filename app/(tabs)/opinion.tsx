@@ -11,6 +11,7 @@ import {
 	TextInput,
 } from "react-native-paper";
 import LocationMap from "@/components/LocationMap";
+import { userBackendApiClient } from "../apiClients/UserBackendApiClient";
 
 export default function OpinionScreen() {
 	const [location, setLocation] = useState<Location.LocationObject | null>(
@@ -21,6 +22,7 @@ export default function OpinionScreen() {
 
 	const [markerCoords, setMarkerCoords] = useState<LatLng | null>(null);
 
+	// 初期位置を取得してマーカーの座標を設定
 	useEffect(() => {
 		(async () => {
 			const { status } = await Location.requestForegroundPermissionsAsync();
@@ -35,15 +37,27 @@ export default function OpinionScreen() {
 		})();
 	}, []);
 
-	const handleSendFeedback = () => {
-		// TODO: API通信部分を記載
-		setSending(true);
+	// 意見を送信する関数
+	const handleSendOpinion = async () => {
+		try {
+			const body = {
+				mailAddress: "tochiji.hai@xxx.xxx",
+				coordinate: {
+					latitude: location?.coords.latitude,
+					longitude: location?.coords.longitude,
+				},
+				opinion: feedback,
+			};
 
-		setTimeout(() => {
+			const success = await userBackendApiClient.post("/user/opinions", body);
+			console.log("success:", success);
 			alert("意見を送信しました！");
 			setFeedback("");
+		} catch (error) {
+			alert(`意見の送信に失敗しました。${error}`);
+		} finally {
 			setSending(false);
-		}, 1000);
+		}
 	};
 
 	const Loading = () => (
@@ -58,7 +72,7 @@ export default function OpinionScreen() {
 	const DefaultView = () => (
 		<KeyboardAvoidingView
 			style={styles.container}
-			behavior={Platform.OS === "ios" ? "padding" : undefined}
+			behavior={Platform.OS === "ios" ? "padding" : "padding"}
 		>
 			<LocationMap
 				markerCoords={markerCoords}
@@ -79,7 +93,7 @@ export default function OpinionScreen() {
 					/>
 					<Button
 						mode="contained"
-						onPress={handleSendFeedback}
+						onPress={handleSendOpinion}
 						loading={sending}
 						disabled={sending}
 						style={styles.button}
