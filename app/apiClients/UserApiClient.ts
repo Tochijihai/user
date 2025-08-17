@@ -59,6 +59,9 @@ class UserApiClient {
 }
 
 // インスタンスをエクスポート
+export default UserApiClient;
+
+// インスタンスをエクスポート
 export const userApiClient = new UserApiClient(
 	process.env.API_BASE_URL ??
 		"https://inyzdjntkl.execute-api.ap-northeast-1.amazonaws.com/dev",

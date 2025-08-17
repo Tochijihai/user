@@ -40,12 +40,18 @@ export default function OpinionScreen() {
 
 	// 意見を送信する関数
 	const handleSendOpinion = async () => {
+		if (!markerCoords) {
+			alert("位置情報が未設定です");
+			return;
+		}
+
+		setSending(true);
 		try {
 			const body = {
 				mailAddress: "tochiji.hai@xxx.xxx",
 				coordinate: {
-					latitude: location?.coords.latitude,
-					longitude: location?.coords.longitude,
+					latitude: markerCoords.latitude, // 👈 markerCoordsを使う
+					longitude: markerCoords.longitude, // 👈 markerCoordsを使う
 				},
 				opinion: feedback,
 			};

@@ -1,6 +1,6 @@
 import { FontAwesome } from "@expo/vector-icons";
 import * as Location from "expo-location";
-import React, { useEffect, useRef, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import {
 	ActivityIndicator,
 	Dimensions,
@@ -8,9 +8,10 @@ import {
 	Pressable,
 	StyleSheet,
 	Text,
+	TouchableOpacity,
 	View,
 } from "react-native";
-import MapView, { Callout, Marker, PROVIDER_GOOGLE } from "react-native-maps";
+import MapView, { Marker, PROVIDER_GOOGLE } from "react-native-maps";
 import { userApiClient } from "../apiClients/UserApiClient";
 
 const windowHeight = Dimensions.get("window").height;
@@ -37,7 +38,7 @@ type Opinion = {
 	Opinion: string;
 };
 
-// モックコメント（本来は API で取得）
+// モックコメント
 const mockComments: Record<string, Comment[]> = {
 	"1": [
 		{
@@ -46,85 +47,74 @@ const mockComments: Record<string, Comment[]> = {
 			content: "ここは最高！",
 			createdAt: new Date().toISOString(),
 		},
-		{
-			id: "c2",
-			author: "Bob",
-			content: "前に来たときも良かった",
-			createdAt: new Date().toISOString(),
-		},
-		{
-			id: "c3",
-			author: "Carol",
-			content: "おすすめです",
-			createdAt: new Date().toISOString(),
-		},
-		{
-			id: "c4",
-			author: "Carol",
-			content: "おすすめです",
-			createdAt: new Date().toISOString(),
-		},
-		{
-			id: "c5",
-			author: "Carol",
-			content: "おすすめです",
-			createdAt: new Date().toISOString(),
-		},
 	],
 	"2": [
 		{
-			id: "c4",
-			author: "Dave",
+			id: "c2",
+			author: "Bob",
 			content: "ちょっと寂しい...",
-			createdAt: new Date().toISOString(),
-		},
-		{
-			id: "c5",
-			author: "Eve",
-			content: "また来たい",
 			createdAt: new Date().toISOString(),
 		},
 	],
 };
-
-const spots: Spot[] = [
-	{
-		id: "1",
-		latitude: 35.6764217,
-		longitude: 139.6500267,
-		title: "てすと１",
-		description: "てすと１",
-	},
-	{
-		id: "2",
-		latitude: 35.6765217,
-		longitude: 139.6510367,
-		title: "てすと２",
-		description: "てすと２",
-	},
-];
 
 type ReactionState = {
 	liked: boolean;
 	count: number;
 };
+
 export default function LocationMap() {
 	const [location, setLocation] = useState<Location.LocationObject | null>(
 		null,
 	);
-	const [posts, setPosts] = useState<Spot[] | null>(null);
+	const [posts, setPosts] = useState<Spot[]>([]);
 	const [selected, setSelected] = useState<Spot | null>(null);
+	const [loading, setLoading] = useState(false);
 
-	const [reactions, setReactions] = useState<Record<string, ReactionState>>(
-		() =>
-			spots.reduce(
-				(acc, spot) => {
-					acc[spot.id] = { liked: false, count: 0 };
-					return acc;
-				},
-				{} as Record<string, ReactionState>,
-			),
-	);
+	const [reactions, setReactions] = useState<Record<string, ReactionState>>({});
+
+	// 投稿取得関数（必ず新しい配列をセット）
+	const fetchPosts = useCallback(async () => {
+		setLoading(true);
+		console.log("Fetching posts...");
+		try {
+			const response = await userApiClient.get<Opinion[]>("/user/opinions");
+			const newSpots: Spot[] =
+				response.data?.map((data: Opinion) => ({
+					id: data.ID,
+					latitude: data.Latitude,
+					longitude: data.Longitude,
+					title: data.ID,
+					description: data.Opinion,
+				})) ?? [];
+			console.log("Fetched posts:", newSpots);
+
+			setPosts([...newSpots]);
+			setReactions(
+				newSpots.reduce(
+					(acc, spot) => {
+						acc[spot.id] = { liked: false, count: 0 };
+						return acc;
+					},
+					{} as Record<string, ReactionState>,
+				),
+			);
+		} catch (error) {
+			console.error("API呼び出しエラー:", error);
+		} finally {
+			setLoading(false);
+		}
+	}, []); // 依存は空でOK（userApiClientが外から変わらない前提）
+
+	useEffect(() => {
+		(async () => {
+			const { status } = await Location.requestForegroundPermissionsAsync();
+			if (status !== "granted") return;
+			const loc = await Location.getCurrentPositionAsync({});
+			setLocation(loc);
+			await fetchPosts();
+		})();
+	}, [fetchPosts]);
 
 	const toggleLike = (id: string) => {
 		setReactions((prev) => {
@@ -139,40 +129,6 @@ export default function LocationMap() {
 			};
 		});
 	};
-
-	useEffect(() => {
-		(async () => {
-			// 位置情報の許可をリクエスト
-			const { status } = await Location.requestForegroundPermissionsAsync();
-			if (status !== "granted") {
-				return;
-			}
-
-			// 現在地を取得
-			const loc = await Location.getCurrentPositionAsync({});
-			setLocation(loc);
-
-			// APIを呼び出して投稿を取得
-			try {
-				console.log("Fetching posts from API...");
-				const response = await userApiClient.get<Opinion[]>("/user/opinions");
-				console.log("response:", response);
-
-				// レスポンスからスポットへの変換処理を実施(表示用)
-				const spots: Spot[] =
-					response.data?.map((data: Opinion) => ({
-						id: data.ID,
-						latitude: data.Latitude,
-						longitude: data.Longitude,
-						title: data.ID,
-						description: data.Opinion,
-					})) ?? [];
-				setPosts(spots); // モックデータを設定
-			} catch (error) {
-				console.error("API呼び出しエラー:", error);
-			}
-		})();
-	}, []);
 
 	if (!location) {
 		return (
@@ -223,22 +179,37 @@ export default function LocationMap() {
 				}}
 				onPress={() => setSelected(null)}
 			>
-				{posts
-					? posts.map((post, idx) => (
-							<Marker
-								key={`${post.latitude}-${post.longitude}-${idx}`}
-								coordinate={{
-									latitude: post.latitude,
-									longitude: post.longitude,
-								}}
-								title={post.title}
-								onPress={() => setSelected(post)}
-								description={post.description}
-								image={require("../../assets/images/post.png")}
-							></Marker>
-						))
-					: null}
+				{posts.map((post, idx) => {
+					console.log("Rendering marker for post:", post);
+					return (
+						<Marker
+							key={`${post.id}-${idx}`}
+							coordinate={{
+								latitude: post.latitude,
+								longitude: post.longitude,
+							}}
+							title={post.title}
+							description={post.description}
+							onPress={() => setSelected(post)}
+							image={require("../../assets/images/post.png")}
+						/>
+					);
+				})}
 			</MapView>
+
+			{/* 更新ボタン（右下配置） */}
+			<TouchableOpacity
+				style={styles.refreshButton}
+				onPress={fetchPosts}
+				disabled={loading}
+			>
+				{loading ? (
+					<ActivityIndicator color="white" />
+				) : (
+					<FontAwesome name="refresh" size={24} color="white" />
+				)}
+			</TouchableOpacity>
+
 			{selected && (
 				<View style={styles.card}>
 					<View style={styles.row}>
@@ -263,7 +234,6 @@ export default function LocationMap() {
 						</Pressable>
 					</View>
 
-					{/* コメント一覧（高さ制限してスクロール） */}
 					<View style={styles.commentListContainer}>
 						<Text style={styles.commentHeader}>コメント</Text>
 						{mockComments[selected.id] &&
@@ -273,7 +243,6 @@ export default function LocationMap() {
 								keyExtractor={(c) => c.id}
 								renderItem={renderComment}
 								nestedScrollEnabled
-								showsVerticalScrollIndicator
 							/>
 						) : (
 							<Text style={{ color: "#666" }}>コメントはまだありません</Text>
@@ -335,5 +304,20 @@ const styles = StyleSheet.create({
 		fontSize: 10,
 		color: "#888",
 		marginTop: 2,
+	},
+	refreshButton: {
+		position: "absolute",
+		bottom: 30,
+		right: 20,
+		backgroundColor: "#007AFF",
+		width: 56,
+		height: 56,
+		borderRadius: 28,
+		alignItems: "center",
+		justifyContent: "center",
+		elevation: 6,
+		shadowColor: "#000",
+		shadowOpacity: 0.3,
+		shadowRadius: 4,
 	},
 });
