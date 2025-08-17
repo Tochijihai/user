@@ -29,6 +29,13 @@ type Comment = {
 	content: string;
 	createdAt: string;
 };
+type Opinion = {
+	ID: string;
+	MailAddress: string;
+	Latitude: number;
+	Longitude: number;
+	Opinion: string;
+};
 
 // モックコメント（本来は API で取得）
 const mockComments: Record<string, Comment[]> = {
@@ -146,16 +153,24 @@ export default function LocationMap() {
 			setLocation(loc);
 
 			// APIを呼び出して投稿を取得
-			const fetchPosts = async () => {
-				try {
-					console.log("Fetching posts from API...");
-					const response = await userApiClient.get("/user/opinions");
-					console.log("response:", response);
-				} catch (error) {
-					console.error("API呼び出しエラー:", error);
-				}
-			};
-			fetchPosts();
+			try {
+				console.log("Fetching posts from API...");
+				const response = await userApiClient.get<Opinion[]>("/user/opinions");
+				console.log("response:", response);
+
+				// レスポンスからスポットへの変換処理を実施(表示用)
+				const spots: Spot[] =
+					response.data?.map((data: Opinion) => ({
+						id: data.ID,
+						latitude: data.Latitude,
+						longitude: data.Longitude,
+						title: data.ID,
+						description: data.Opinion,
+					})) ?? [];
+				setPosts(spots); // モックデータを設定
+			} catch (error) {
+				console.error("API呼び出しエラー:", error);
+			}
 		})();
 	}, []);
 
@@ -232,13 +247,13 @@ export default function LocationMap() {
 							style={styles.button}
 						>
 							<FontAwesome
-								name={reactions[selected.id].liked ? "heart" : "heart-o"}
+								name={reactions[selected.id]?.liked ? "heart" : "heart-o"}
 								size={24}
-								color={reactions[selected.id].liked ? "#e0245e" : "#444"}
+								color={reactions[selected.id]?.liked ? "#e0245e" : "#444"}
 							/>
 						</Pressable>
 						<Text style={{ marginLeft: 8 }}>
-							{reactions[selected.id].count}
+							{reactions[selected.id]?.count}
 						</Text>
 						<Pressable
 							onPress={() => setSelected(null)}
