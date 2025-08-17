@@ -50,8 +50,7 @@ export default function OpinionScreen() {
 				opinion: feedback,
 			};
 
-			const success = await userApiClient.post("/user/opinions", body);
-			console.log("success:", success);
+			await userApiClient.post("/user/opinions", body);
 			alert("意見を送信しました！");
 			setFeedback("");
 		} catch (error) {

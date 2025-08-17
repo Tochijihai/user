@@ -11,6 +11,7 @@ import {
 	View,
 } from "react-native";
 import MapView, { Callout, Marker, PROVIDER_GOOGLE } from "react-native-maps";
+import { userApiClient } from "../apiClients/UserApiClient";
 
 const windowHeight = Dimensions.get("window").height;
 
@@ -144,8 +145,17 @@ export default function LocationMap() {
 			const loc = await Location.getCurrentPositionAsync({});
 			setLocation(loc);
 
-			// TODO: 投稿取得API
-			setPosts(spots);
+			// APIを呼び出して投稿を取得
+			const fetchPosts = async () => {
+				try {
+					console.log("Fetching posts from API...");
+					const response = await userApiClient.get("/user/opinions");
+					console.log("response:", response);
+				} catch (error) {
+					console.error("API呼び出しエラー:", error);
+				}
+			};
+			fetchPosts();
 		})();
 	}, []);
 

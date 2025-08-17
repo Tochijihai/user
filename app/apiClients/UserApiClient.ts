@@ -1,12 +1,12 @@
-// 投稿作成APIのレスポンス型
+import axios from "axios"; // axiosをインポート
 export type ApiResponse<T> = {
 	statusCode: number;
-	body?: T;
+	data?: T;
 };
 
 class UserApiClient {
 	private baseURL: string;
-	private headers: HeadersInit;
+	private headers: Record<string, string>;
 
 	constructor(baseURL: string) {
 		this.baseURL = baseURL;
@@ -17,50 +17,39 @@ class UserApiClient {
 	}
 
 	// GETメソッド
-	public async get<T>(path: string): Promise<ApiResponse<T>> {
+	public async get<T>(path: string) {
 		try {
-			const response = await fetch(`${this.baseURL}${path}`, {
-				method: "GET",
+			const response = await axios.get<T>(`${this.baseURL}${path}`, {
 				headers: this.headers,
 			});
 
-			if (!response.ok) {
-				// TODO: 正式なエラーハンドリング
-				throw new Error(`Request failed with status: ${response.status}`);
-			}
-
-			// レスポンスの空判定チェック用テキスト
-			const responseText = await response.text();
-
 			return {
 				statusCode: response.status,
-				body: responseText ? await response.json() : undefined, // レスポンスをJSONとしてパース
+				data: response.data,
 			};
 		} catch (error) {
 			console.error("API call error:", error);
 			throw error;
 		}
 	}
+
 	// POSTメソッド。body と response の型を動的に設定
-	public async post<T, S>(path: string, body?: S): Promise<ApiResponse<T>> {
+	public async post<T, S>(
+		path: string,
+		requestBody?: S,
+	): Promise<ApiResponse<T>> {
 		try {
-			const response = await fetch(`${this.baseURL}${path}`, {
-				method: "POST",
-				headers: this.headers,
-				body: body ? JSON.stringify(body) : undefined,
-			});
-
-			if (!response.ok) {
-				// TODO: 正式なエラーハンドリング
-				throw new Error(`Request failed with status: ${response.status}`);
-			}
-
-			// レスポンスの空判定チェック用テキスト
-			const responseText = await response.text();
+			const response = await axios.post<T>(
+				`${this.baseURL}${path}`,
+				requestBody,
+				{
+					headers: this.headers,
+				},
+			);
 
 			return {
 				statusCode: response.status,
-				body: responseText ? await response.json() : undefined, // レスポンスをJSONとしてパース
+				data: response.data,
 			};
 		} catch (error) {
 			console.error("API call error:", error);
