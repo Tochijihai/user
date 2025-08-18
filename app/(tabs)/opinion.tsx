@@ -84,7 +84,6 @@ export default function OpinionScreen() {
 			<LocationMap
 				markerCoords={markerCoords}
 				setMarkerCoords={setMarkerCoords}
-				onLocationLoaded={(loc) => console.log("初期位置:", loc.coords)}
 			/>
 
 			<Card style={styles.formContainer}>
