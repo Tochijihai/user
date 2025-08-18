@@ -1,6 +1,6 @@
 import { FontAwesome } from "@expo/vector-icons";
 import * as Location from "expo-location";
-import React, { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import {
 	ActivityIndicator,
 	Dimensions,
@@ -15,6 +15,7 @@ import {
 	View,
 } from "react-native";
 import MapView, { Marker, PROVIDER_GOOGLE } from "react-native-maps";
+import { userInfo } from "@/testUserInfo";
 import { userApiClient } from "../apiClients/UserApiClient";
 
 const windowHeight = Dimensions.get("window").height;
@@ -29,7 +30,7 @@ type Spot = {
 
 type ResponseComment = {
 	Id: string;
-	CommentId: string;
+	CommentID: string;
 	Author?: string;
 	MailAddress: string;
 	Comment: string;
@@ -104,11 +105,10 @@ export default function LocationMap() {
 			const response = await userApiClient.get<ResponseComment[]>(
 				`/user/opinions/${opinionId}/comments`,
 			);
-
 			const commentList: DisplayComment[] =
 				response.data?.map((data: ResponseComment) => ({
 					id: data.Id,
-					commentId: data.CommentId,
+					commentId: data.CommentID,
 					author: data?.Author ?? data.MailAddress, //TODO: Authorがある場合はそれを使う
 					comment: data.Comment,
 					createdAt: data.CreatedDateTime,
@@ -153,7 +153,8 @@ export default function LocationMap() {
 	};
 
 	const renderComment = ({ item }: { item: DisplayComment }) => (
-		<View style={styles.commentRow}>
+		// <View>にkeyプロパティを追加
+		<View key={item.commentId} style={styles.commentRow}>
 			<View style={styles.avatar}>
 				<Text style={{ color: "white", fontWeight: "600" }}>
 					{item.author.slice(0, 1)}
@@ -182,7 +183,7 @@ export default function LocationMap() {
 		if (newComment.trim() === "" || !selected) return;
 		try {
 			await userApiClient.post(`/user/opinions/${selected.id}/comments`, {
-				mailAddress: "tochiji.hai@xxx.xxx",
+				mailAddress: userInfo.mailAddress,
 				comment: newComment,
 			});
 			setNewComment("");
@@ -275,7 +276,9 @@ export default function LocationMap() {
 							commentsByPost[selected.id].length > 0 ? (
 								<FlatList
 									data={commentsByPost[selected.id]}
-									keyExtractor={(c) => c.id}
+									keyExtractor={(c, index) =>
+										c.commentId || c.id || index.toString()
+									}
 									renderItem={renderComment}
 									nestedScrollEnabled
 								/>

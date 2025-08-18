@@ -12,6 +12,7 @@ import {
 } from "react-native-paper";
 import LocationMap from "@/components/LocationMap";
 import { Colors } from "@/constants/Colors"; // Colors.tsをインポート
+import { userInfo } from "@/testUserInfo";
 import { userApiClient } from "../apiClients/UserApiClient";
 
 export default function OpinionScreen() {
@@ -48,7 +49,7 @@ export default function OpinionScreen() {
 		setSending(true);
 		try {
 			const body = {
-				mailAddress: "tochiji.hai@xxx.xxx",
+				mailAddress: userInfo.mailAddress,
 				coordinate: {
 					latitude: markerCoords.latitude,
 					longitude: markerCoords.longitude,
