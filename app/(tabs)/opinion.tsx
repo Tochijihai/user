@@ -50,8 +50,8 @@ export default function OpinionScreen() {
 			const body = {
 				mailAddress: "tochiji.hai@xxx.xxx",
 				coordinate: {
-					latitude: markerCoords.latitude, // 👈 markerCoordsを使う
-					longitude: markerCoords.longitude, // 👈 markerCoordsを使う
+					latitude: markerCoords.latitude,
+					longitude: markerCoords.longitude,
 				},
 				opinion: feedback,
 			};

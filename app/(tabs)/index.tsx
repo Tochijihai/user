@@ -5,9 +5,12 @@ import {
 	ActivityIndicator,
 	Dimensions,
 	FlatList,
+	KeyboardAvoidingView, // 追加
+	Platform, // 追加
 	Pressable,
 	StyleSheet,
 	Text,
+	TextInput,
 	TouchableOpacity,
 	View,
 } from "react-native";
@@ -30,6 +33,7 @@ type Comment = {
 	content: string;
 	createdAt: string;
 };
+
 type Opinion = {
 	ID: string;
 	MailAddress: string;
@@ -70,8 +74,8 @@ export default function LocationMap() {
 	const [posts, setPosts] = useState<Spot[]>([]);
 	const [selected, setSelected] = useState<Spot | null>(null);
 	const [loading, setLoading] = useState(false);
-
 	const [reactions, setReactions] = useState<Record<string, ReactionState>>({});
+	const [newComment, setNewComment] = useState<string>(""); // 新しいコメントの状態
 
 	// 投稿取得関数（必ず新しい配列をセット）
 	const fetchPosts = useCallback(async () => {
@@ -104,7 +108,7 @@ export default function LocationMap() {
 		} finally {
 			setLoading(false);
 		}
-	}, []); // 依存は空でOK（userApiClientが外から変わらない前提）
+	}, []);
 
 	useEffect(() => {
 		(async () => {
@@ -166,91 +170,150 @@ export default function LocationMap() {
 		</View>
 	);
 
+	// コメント送信ハンドラー
+	const handleCommentSubmit = async () => {
+		if (newComment.trim() === "" || !selected) return; // 空のコメントまたはselectedがnullの場合は無視
+		const comment: Comment = {
+			id: `c${Date.now()}`, // 取得してきたcommentIDを設定
+			author: "tochiji.hai@xxx.xxx", // 名前返却がない場合、mailAddressを使う
+			content: newComment,
+			createdAt: new Date().toISOString(),
+		};
+
+		// APIリクエストを送信
+		try {
+			await userApiClient.post(`/user/opinions/${selected.id}/comments`, {
+				mailAddress: "tochiji.hai@xxx.xxx",
+				comment: newComment,
+			});
+			// モックコメントに追加
+			mockComments[selected.id] = [
+				...(mockComments[selected.id] || []),
+				comment,
+			];
+			setNewComment(""); // 入力フィールドをクリア
+		} catch (error) {
+			console.error("コメント投稿エラー:", error);
+		}
+	};
+
 	return (
-		<View style={{ flex: 1 }}>
-			<MapView
-				style={{ flex: 1 }}
-				provider={PROVIDER_GOOGLE}
-				initialRegion={{
-					latitude: location.coords.latitude,
-					longitude: location.coords.longitude,
-					latitudeDelta: 0.01,
-					longitudeDelta: 0.01,
-				}}
-				onPress={() => setSelected(null)}
-			>
-				{posts.map((post, idx) => {
-					console.log("Rendering marker for post:", post);
-					return (
-						<Marker
-							key={`${post.id}-${idx}`}
-							coordinate={{
-								latitude: post.latitude,
-								longitude: post.longitude,
-							}}
-							title={post.title}
-							description={post.description}
-							onPress={() => setSelected(post)}
-							image={require("../../assets/images/post.png")}
-						/>
-					);
-				})}
-			</MapView>
+		<KeyboardAvoidingView
+			style={{ flex: 1 }}
+			behavior={Platform.OS === "ios" ? "padding" : "height"}
+		>
+			<View style={{ flex: 1 }}>
+				<MapView
+					style={{ flex: 1 }}
+					provider={PROVIDER_GOOGLE}
+					initialRegion={{
+						latitude: location.coords.latitude,
+						longitude: location.coords.longitude,
+						latitudeDelta: 0.01,
+						longitudeDelta: 0.01,
+					}}
+					onPress={() => setSelected(null)}
+				>
+					{posts.map((post, idx) => {
+						console.log("Rendering marker for post:", post);
+						return (
+							<Marker
+								key={`${post.id}-${idx}`}
+								coordinate={{
+									latitude: post.latitude,
+									longitude: post.longitude,
+								}}
+								title={post.title}
+								description={post.description}
+								onPress={() => setSelected(post)}
+								image={require("../../assets/images/post.png")}
+							/>
+						);
+					})}
+				</MapView>
 
-			{/* 更新ボタン（右下配置） */}
-			<TouchableOpacity
-				style={styles.refreshButton}
-				onPress={fetchPosts}
-				disabled={loading}
-			>
-				{loading ? (
-					<ActivityIndicator color="white" />
-				) : (
-					<FontAwesome name="refresh" size={24} color="white" />
+				{/* 更新ボタン（右下配置） */}
+				<TouchableOpacity
+					style={styles.refreshButton}
+					onPress={fetchPosts}
+					disabled={loading}
+				>
+					{loading ? (
+						<ActivityIndicator color="white" />
+					) : (
+						<FontAwesome name="refresh" size={24} color="white" />
+					)}
+				</TouchableOpacity>
+
+				{selected && (
+					<View style={styles.card}>
+						<View style={styles.row}>
+							<Pressable
+								onPress={() => toggleLike(selected.id)}
+								style={styles.button}
+							>
+								<FontAwesome
+									name={reactions[selected.id]?.liked ? "heart" : "heart-o"}
+									size={24}
+									color={reactions[selected.id]?.liked ? "#e0245e" : "#444"}
+								/>
+							</Pressable>
+							<Text style={{ marginLeft: 8 }}>
+								{reactions[selected.id]?.count}
+							</Text>
+							<Pressable
+								onPress={() => setSelected(null)}
+								style={{ marginLeft: "auto" }}
+							>
+								<Text style={{ color: "blue" }}>閉じる</Text>
+							</Pressable>
+						</View>
+
+						<View style={styles.commentListContainer}>
+							<Text style={styles.commentHeader}>コメント</Text>
+							{mockComments[selected.id] &&
+							mockComments[selected.id].length > 0 ? (
+								<FlatList
+									data={mockComments[selected.id]}
+									keyExtractor={(c) => c.id}
+									renderItem={renderComment}
+									nestedScrollEnabled
+								/>
+							) : (
+								<Text style={{ color: "#666" }}>コメントはまだありません</Text>
+							)}
+							{/* コメント入力フォームの追加 */}
+							<View
+								style={{
+									flexDirection: "row",
+									alignItems: "center",
+									marginTop: 8,
+								}}
+							>
+								<TextInput
+									style={{
+										flex: 1,
+										borderColor: "#ccc",
+										borderWidth: 1,
+										borderRadius: 4,
+										padding: 12,
+									}}
+									placeholder="コメントを入力..."
+									value={newComment}
+									onChangeText={setNewComment}
+								/>
+								<TouchableOpacity
+									onPress={handleCommentSubmit}
+									style={{ marginLeft: 8 }}
+								>
+									<Text style={{ color: "blue" }}>送信</Text>
+								</TouchableOpacity>
+							</View>
+						</View>
+					</View>
 				)}
-			</TouchableOpacity>
-
-			{selected && (
-				<View style={styles.card}>
-					<View style={styles.row}>
-						<Pressable
-							onPress={() => toggleLike(selected.id)}
-							style={styles.button}
-						>
-							<FontAwesome
-								name={reactions[selected.id]?.liked ? "heart" : "heart-o"}
-								size={24}
-								color={reactions[selected.id]?.liked ? "#e0245e" : "#444"}
-							/>
-						</Pressable>
-						<Text style={{ marginLeft: 8 }}>
-							{reactions[selected.id]?.count}
-						</Text>
-						<Pressable
-							onPress={() => setSelected(null)}
-							style={{ marginLeft: "auto" }}
-						>
-							<Text style={{ color: "blue" }}>閉じる</Text>
-						</Pressable>
-					</View>
-
-					<View style={styles.commentListContainer}>
-						<Text style={styles.commentHeader}>コメント</Text>
-						{mockComments[selected.id] &&
-						mockComments[selected.id].length > 0 ? (
-							<FlatList
-								data={mockComments[selected.id]}
-								keyExtractor={(c) => c.id}
-								renderItem={renderComment}
-								nestedScrollEnabled
-							/>
-						) : (
-							<Text style={{ color: "#666" }}>コメントはまだありません</Text>
-						)}
-					</View>
-				</View>
-			)}
-		</View>
+			</View>
+		</KeyboardAvoidingView>
 	);
 }
 
