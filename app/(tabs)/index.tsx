@@ -5,8 +5,8 @@ import {
 	ActivityIndicator,
 	Dimensions,
 	FlatList,
-	KeyboardAvoidingView, // 追加
-	Platform, // 追加
+	KeyboardAvoidingView,
+	Platform,
 	Pressable,
 	StyleSheet,
 	Text,
@@ -27,10 +27,20 @@ type Spot = {
 	description?: string;
 };
 
-type Comment = {
+type ResponseComment = {
+	Id: string;
+	CommentId: string;
+	Author?: string;
+	MailAddress: string;
+	Comment: string;
+	CreatedAt: string;
+};
+
+type DisplayComment = {
 	id: string;
+	commentId: string;
 	author: string;
-	content: string;
+	comment: string;
 	createdAt: string;
 };
 
@@ -40,26 +50,6 @@ type Opinion = {
 	Latitude: number;
 	Longitude: number;
 	Opinion: string;
-};
-
-// モックコメント
-const mockComments: Record<string, Comment[]> = {
-	"1": [
-		{
-			id: "c1",
-			author: "Alice",
-			content: "ここは最高！",
-			createdAt: new Date().toISOString(),
-		},
-	],
-	"2": [
-		{
-			id: "c2",
-			author: "Bob",
-			content: "ちょっと寂しい...",
-			createdAt: new Date().toISOString(),
-		},
-	],
 };
 
 type ReactionState = {
@@ -75,12 +65,13 @@ export default function LocationMap() {
 	const [selected, setSelected] = useState<Spot | null>(null);
 	const [loading, setLoading] = useState(false);
 	const [reactions, setReactions] = useState<Record<string, ReactionState>>({});
-	const [newComment, setNewComment] = useState<string>(""); // 新しいコメントの状態
+	const [newComment, setNewComment] = useState<string>("");
+	const [commentsByPost, setCommentsByPost] = useState<
+		Record<string, DisplayComment[]>
+	>({});
 
-	// 投稿取得関数（必ず新しい配列をセット）
 	const fetchPosts = useCallback(async () => {
 		setLoading(true);
-		console.log("Fetching posts...");
 		try {
 			const response = await userApiClient.get<Opinion[]>("/user/opinions");
 			const newSpots: Spot[] =
@@ -91,8 +82,6 @@ export default function LocationMap() {
 					title: data.ID,
 					description: data.Opinion,
 				})) ?? [];
-			console.log("Fetched posts:", newSpots);
-
 			setPosts([...newSpots]);
 			setReactions(
 				newSpots.reduce(
@@ -110,6 +99,32 @@ export default function LocationMap() {
 		}
 	}, []);
 
+	const fetchComments = useCallback(async (opinionId: string) => {
+		try {
+			const response = await userApiClient.get<ResponseComment[]>(
+				`/user/opinions/${opinionId}/comments`,
+			);
+			// setCommentsByPost((prev) => ({
+			// 	...prev,
+			// 	[opinionId]: response.data ?? [],
+			// }));
+			const commentList: DisplayComment[] =
+				response.data?.map((data: ResponseComment) => ({
+					id: data.Id,
+					commentId: data.CommentId,
+					author: data?.Author ?? data.MailAddress, //TODO: Authorがある場合はそれを使う
+					comment: data.Comment,
+					createdAt: data.CreatedAt,
+				})) ?? [];
+			setCommentsByPost((prev) => ({
+				...prev,
+				[opinionId]: commentList,
+			}));
+		} catch (error) {
+			console.error("コメント取得エラー:", error);
+		}
+	}, []);
+
 	useEffect(() => {
 		(async () => {
 			const { status } = await Location.requestForegroundPermissionsAsync();
@@ -119,6 +134,12 @@ export default function LocationMap() {
 			await fetchPosts();
 		})();
 	}, [fetchPosts]);
+
+	useEffect(() => {
+		if (selected?.id) {
+			fetchComments(selected.id);
+		}
+	}, [selected, fetchComments]);
 
 	const toggleLike = (id: string) => {
 		setReactions((prev) => {
@@ -134,17 +155,7 @@ export default function LocationMap() {
 		});
 	};
 
-	if (!location) {
-		return (
-			<View style={styles.center}>
-				<ActivityIndicator size="large" />
-				<Text>位置情報を取得中...</Text>
-			</View>
-		);
-	}
-
-	// コメントレンダー
-	const renderComment = ({ item }: { item: Comment }) => (
+	const renderComment = ({ item }: { item: DisplayComment }) => (
 		<View style={styles.commentRow}>
 			<View style={styles.avatar}>
 				<Text style={{ color: "white", fontWeight: "600" }}>
@@ -153,7 +164,7 @@ export default function LocationMap() {
 			</View>
 			<View style={{ flex: 1, marginLeft: 8 }}>
 				<Text style={styles.commentAuthor}>{item.author}</Text>
-				<Text>{item.content}</Text>
+				<Text>{item.comment}</Text>
 				<Text style={styles.timestamp}>
 					{new Date(item.createdAt).toLocaleDateString("ja-JP", {
 						year: "numeric",
@@ -170,32 +181,28 @@ export default function LocationMap() {
 		</View>
 	);
 
-	// コメント送信ハンドラー
 	const handleCommentSubmit = async () => {
-		if (newComment.trim() === "" || !selected) return; // 空のコメントまたはselectedがnullの場合は無視
-		const comment: Comment = {
-			id: `c${Date.now()}`, // 取得してきたcommentIDを設定
-			author: "tochiji.hai@xxx.xxx", // 名前返却がない場合、mailAddressを使う
-			content: newComment,
-			createdAt: new Date().toISOString(),
-		};
-
-		// APIリクエストを送信
+		if (newComment.trim() === "" || !selected) return;
 		try {
 			await userApiClient.post(`/user/opinions/${selected.id}/comments`, {
 				mailAddress: "tochiji.hai@xxx.xxx",
 				comment: newComment,
 			});
-			// モックコメントに追加
-			mockComments[selected.id] = [
-				...(mockComments[selected.id] || []),
-				comment,
-			];
-			setNewComment(""); // 入力フィールドをクリア
+			setNewComment("");
+			await fetchComments(selected.id);
 		} catch (error) {
 			console.error("コメント投稿エラー:", error);
 		}
 	};
+
+	if (!location) {
+		return (
+			<View style={styles.center}>
+				<ActivityIndicator size="large" />
+				<Text>位置情報を取得中...</Text>
+			</View>
+		);
+	}
 
 	return (
 		<KeyboardAvoidingView
@@ -214,25 +221,21 @@ export default function LocationMap() {
 					}}
 					onPress={() => setSelected(null)}
 				>
-					{posts.map((post, idx) => {
-						console.log("Rendering marker for post:", post);
-						return (
-							<Marker
-								key={`${post.id}-${idx}`}
-								coordinate={{
-									latitude: post.latitude,
-									longitude: post.longitude,
-								}}
-								title={post.title}
-								description={post.description}
-								onPress={() => setSelected(post)}
-								image={require("../../assets/images/post.png")}
-							/>
-						);
-					})}
+					{posts.map((post, idx) => (
+						<Marker
+							key={`${post.id}-${idx}`}
+							coordinate={{
+								latitude: post.latitude,
+								longitude: post.longitude,
+							}}
+							title={post.title}
+							description={post.description}
+							onPress={() => setSelected(post)}
+							image={require("../../assets/images/post.png")}
+						/>
+					))}
 				</MapView>
 
-				{/* 更新ボタン（右下配置） */}
 				<TouchableOpacity
 					style={styles.refreshButton}
 					onPress={fetchPosts}
@@ -271,10 +274,10 @@ export default function LocationMap() {
 
 						<View style={styles.commentListContainer}>
 							<Text style={styles.commentHeader}>コメント</Text>
-							{mockComments[selected.id] &&
-							mockComments[selected.id].length > 0 ? (
+							{commentsByPost[selected.id] &&
+							commentsByPost[selected.id].length > 0 ? (
 								<FlatList
-									data={mockComments[selected.id]}
+									data={commentsByPost[selected.id]}
 									keyExtractor={(c) => c.id}
 									renderItem={renderComment}
 									nestedScrollEnabled
@@ -282,7 +285,6 @@ export default function LocationMap() {
 							) : (
 								<Text style={{ color: "#666" }}>コメントはまだありません</Text>
 							)}
-							{/* コメント入力フォームの追加 */}
 							<View
 								style={{
 									flexDirection: "row",
