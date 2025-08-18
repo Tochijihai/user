@@ -33,7 +33,7 @@ type ResponseComment = {
 	Author?: string;
 	MailAddress: string;
 	Comment: string;
-	CreatedAt: string;
+	CreatedDateTime: string;
 };
 
 type DisplayComment = {
@@ -79,7 +79,7 @@ export default function LocationMap() {
 					id: data.ID,
 					latitude: data.Latitude,
 					longitude: data.Longitude,
-					title: data.ID,
+					title: data.MailAddress, // TODO:適切なタイトルの設定
 					description: data.Opinion,
 				})) ?? [];
 			setPosts([...newSpots]);
@@ -104,17 +104,14 @@ export default function LocationMap() {
 			const response = await userApiClient.get<ResponseComment[]>(
 				`/user/opinions/${opinionId}/comments`,
 			);
-			// setCommentsByPost((prev) => ({
-			// 	...prev,
-			// 	[opinionId]: response.data ?? [],
-			// }));
+
 			const commentList: DisplayComment[] =
 				response.data?.map((data: ResponseComment) => ({
 					id: data.Id,
 					commentId: data.CommentId,
 					author: data?.Author ?? data.MailAddress, //TODO: Authorがある場合はそれを使う
 					comment: data.Comment,
-					createdAt: data.CreatedAt,
+					createdAt: data.CreatedDateTime,
 				})) ?? [];
 			setCommentsByPost((prev) => ({
 				...prev,
