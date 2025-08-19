@@ -55,9 +55,9 @@ type Opinion = {
 	Opinion: string;
 };
 
-type ReactionState = {
-	liked: boolean;
-	count: number;
+type ReactionInfo = {
+	IsReactioned: boolean;
+	ReactionCount: number;
 };
 
 export default function LocationMap() {
@@ -67,13 +67,13 @@ export default function LocationMap() {
 	const [posts, setPosts] = useState<Spot[]>([]);
 	const [selected, setSelected] = useState<Spot | null>(null);
 	const [loading, setLoading] = useState(false);
-	const [reactions, setReactions] = useState<Record<string, ReactionState>>({});
 	const [newComment, setNewComment] = useState<string>("");
+	const [reactionInfo, setReactionInfo] = useState<ReactionInfo | null>(null); // リアクション情報のステート
 	const [commentsByPost, setCommentsByPost] = useState<
 		Record<string, DisplayComment[]>
 	>({});
 
-	const fetchPosts = useCallback(async () => {
+	const fetchOpinion = useCallback(async () => {
 		setLoading(true);
 		try {
 			const response = await userApiClient.get<Opinion[]>("/user/opinions");
@@ -82,19 +82,10 @@ export default function LocationMap() {
 					id: data.ID,
 					latitude: data.Coordinate.Latitude,
 					longitude: data.Coordinate.Longitude,
-					title: data.MailAddress, // TODO:適切なタイトルの設定
+					title: data.MailAddress,
 					description: data.Opinion,
 				})) ?? [];
 			setPosts([...newSpots]);
-			setReactions(
-				newSpots.reduce(
-					(acc, spot) => {
-						acc[spot.id] = { liked: false, count: 0 };
-						return acc;
-					},
-					{} as Record<string, ReactionState>,
-				),
-			);
 		} catch (error) {
 			console.error("API呼び出しエラー:", error);
 		} finally {
@@ -111,7 +102,7 @@ export default function LocationMap() {
 				response.data?.map((data: ResponseComment) => ({
 					id: data.Id,
 					commentId: data.CommentID,
-					author: data?.Author ?? data.MailAddress, //TODO: Authorがある場合はそれを使う
+					author: data?.Author ?? data.MailAddress,
 					comment: data.Comment,
 					createdAt: data.CreatedDateTime,
 				})) ?? [];
@@ -124,55 +115,71 @@ export default function LocationMap() {
 		}
 	}, []);
 
-	useEffect(() => {
-		(async () => {
-			const { status } = await Location.requestForegroundPermissionsAsync();
-			if (status !== "granted") return;
-			const loc = await Location.getCurrentPositionAsync({});
-			setLocation(loc);
-			await fetchPosts();
-		})();
-	}, [fetchPosts]);
-
-	useEffect(() => {
-		if (selected?.id) {
-			fetchComments(selected.id);
-		}
-	}, [selected, fetchComments]);
-
-	const updateReaction = (prevState: ReactionState) => {
-		const liked = !prevState.liked;
-		const count = liked
-			? prevState.count + 1
-			: Math.max(0, prevState.count - 1);
-		return { liked, count };
-	};
-
-	const sendReactionToApi = async (id: string, liked: boolean) => {
+	const fetchReactions = useCallback(async (opinionId: string) => {
 		try {
-			await userApiClient.put(`/user/opinions/${id}/reactions`, {
-				mailAddress: userInfo.mailAddress,
-				reaction: liked,
+			const response = await userApiClient.get<ReactionInfo>(
+				`/user/opinions/${opinionId}/reactions`,
+				{
+					mailAddress: userInfo.mailAddress,
+				},
+			);
+			const data = response.data;
+			console.log("data:", data);
+			setReactionInfo({
+				IsReactioned: data.IsReactioned,
+				ReactionCount: data.ReactionCount,
 			});
+		} catch (error) {
+			console.error("リアクション取得エラー:", error);
+			// エラー時もステートをクリアして表示をリセット
+			setReactionInfo(null);
+		}
+	}, []);
+
+	const sendReaction = async (id: string, isReactioned: boolean) => {
+		try {
+			await userApiClient.put(
+				`/user/opinions/${id}/reactions`,
+				{},
+				{
+					reaction: isReactioned,
+					mailAddress: userInfo.mailAddress,
+				},
+			);
+			// API成功後、リアクション情報を再取得
+			fetchReactions(id);
 		} catch (error) {
 			console.error("API通信エラー:", error);
 		}
 	};
 
 	const toggleLike = async (id: string) => {
-		setReactions((prev) => {
-			const prevState = prev[id];
-			const { liked, count } = updateReaction(prevState);
-			sendReactionToApi(id, liked);
-			return {
-				...prev,
-				[id]: { liked, count },
-			};
-		});
+		// 現在のリアクション状態を取得
+		const isCurrentlyReactioned = reactionInfo?.IsReactioned ?? false;
+		// APIに送信する新しい状態
+		const newReactionState = !isCurrentlyReactioned;
+		// APIに送信
+		await sendReaction(id, newReactionState);
 	};
 
+	useEffect(() => {
+		(async () => {
+			const { status } = await Location.requestForegroundPermissionsAsync();
+			if (status !== "granted") return;
+			const loc = await Location.getCurrentPositionAsync({});
+			setLocation(loc);
+			await fetchOpinion();
+		})();
+	}, [fetchOpinion]);
+
+	useEffect(() => {
+		if (selected?.id) {
+			fetchComments(selected.id);
+			fetchReactions(selected.id); // リアクション情報を取得
+		}
+	}, [selected, fetchComments, fetchReactions]);
+
 	const renderComment = ({ item }: { item: DisplayComment }) => (
-		// <View>にkeyプロパティを追加
 		<View key={item.commentId} style={styles.commentRow}>
 			<View style={styles.avatar}>
 				<Text style={{ color: "white", fontWeight: "600" }}>
@@ -201,10 +208,14 @@ export default function LocationMap() {
 	const handleCommentSubmit = async () => {
 		if (newComment.trim() === "" || !selected) return;
 		try {
-			await userApiClient.post(`/user/opinions/${selected.id}/comments`, {
-				mailAddress: userInfo.mailAddress,
-				comment: newComment,
-			});
+			await userApiClient.post(
+				`/user/opinions/${selected.id}/comments`,
+				{},
+				{
+					mailAddress: userInfo.mailAddress,
+					comment: newComment,
+				},
+			);
 			setNewComment("");
 			await fetchComments(selected.id);
 		} catch (error) {
@@ -255,7 +266,7 @@ export default function LocationMap() {
 
 				<TouchableOpacity
 					style={styles.refreshButton}
-					onPress={fetchPosts}
+					onPress={fetchOpinion}
 					disabled={loading}
 				>
 					{loading ? (
@@ -273,13 +284,13 @@ export default function LocationMap() {
 								style={styles.button}
 							>
 								<FontAwesome
-									name={reactions[selected.id]?.liked ? "heart" : "heart-o"}
+									name={reactionInfo?.IsReactioned ? "heart" : "heart-o"}
 									size={24}
-									color={reactions[selected.id]?.liked ? "#e0245e" : "#444"}
+									color={reactionInfo?.IsReactioned ? "#e0245e" : "#444"}
 								/>
 							</Pressable>
 							<Text style={{ marginLeft: 8 }}>
-								{reactions[selected.id]?.count}
+								{reactionInfo?.ReactionCount}
 							</Text>
 							<Pressable
 								onPress={() => setSelected(null)}

@@ -17,10 +17,10 @@ class UserApiClient {
 	}
 
 	// GETメソッド
-	public async get<T>(path: string) {
+	public async get<T>(path: string, customHeaders: Record<string, any> = {}) {
 		try {
 			const response = await axios.get<T>(`${this.baseURL}${path}`, {
-				headers: this.headers,
+				headers: { ...this.headers, ...customHeaders },
 			});
 
 			return {
@@ -36,6 +36,7 @@ class UserApiClient {
 	// POSTメソッド。body と response の型を動的に設定
 	public async post<T, S>(
 		path: string,
+		customHeaders: Record<string, any> = {},
 		requestBody?: S,
 	): Promise<ApiResponse<T>> {
 		try {
@@ -43,7 +44,7 @@ class UserApiClient {
 				`${this.baseURL}${path}`,
 				requestBody,
 				{
-					headers: this.headers,
+					headers: { ...this.headers, ...customHeaders },
 				},
 			);
 
@@ -60,6 +61,7 @@ class UserApiClient {
 	// PUTメソッド。body と response の型を動的に設定
 	public async put<T, S>(
 		path: string,
+		customHeaders: Record<string, any> = {},
 		requestBody?: S,
 	): Promise<ApiResponse<T>> {
 		try {
@@ -67,7 +69,7 @@ class UserApiClient {
 				`${this.baseURL}${path}`,
 				requestBody,
 				{
-					headers: this.headers,
+					headers: { ...this.headers, ...customHeaders },
 				},
 			);
 
