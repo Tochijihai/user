@@ -48,8 +48,10 @@ type DisplayComment = {
 type Opinion = {
 	ID: string;
 	MailAddress: string;
-	Latitude: number;
-	Longitude: number;
+	Coordinate: {
+		Latitude: number;
+		Longitude: number;
+	};
 	Opinion: string;
 };
 
@@ -78,8 +80,8 @@ export default function LocationMap() {
 			const newSpots: Spot[] =
 				response.data?.map((data: Opinion) => ({
 					id: data.ID,
-					latitude: data.Latitude,
-					longitude: data.Longitude,
+					latitude: data.Coordinate.Latitude,
+					longitude: data.Coordinate.Longitude,
 					title: data.MailAddress, // TODO:適切なタイトルの設定
 					description: data.Opinion,
 				})) ?? [];
@@ -138,24 +140,30 @@ export default function LocationMap() {
 		}
 	}, [selected, fetchComments]);
 
+	const updateReaction = (prevState: ReactionState) => {
+		const liked = !prevState.liked;
+		const count = liked
+			? prevState.count + 1
+			: Math.max(0, prevState.count - 1);
+		return { liked, count };
+	};
+
+	const sendReactionToApi = async (id: string, liked: boolean) => {
+		try {
+			await userApiClient.put(`/user/opinions/${id}/reactions`, {
+				mailAddress: userInfo.mailAddress,
+				reaction: liked,
+			});
+		} catch (error) {
+			console.error("API通信エラー:", error);
+		}
+	};
+
 	const toggleLike = async (id: string) => {
 		setReactions((prev) => {
 			const prevState = prev[id];
-			const liked = !prevState.liked;
-			const count = liked
-				? prevState.count + 1
-				: Math.max(0, prevState.count - 1);
-
-			// API通信を追加
-			userApiClient
-				.put(`/user/opinions/${id}/reactions`, {
-					mailAddress: userInfo.mailAddress,
-					reaction: liked,
-				})
-				.catch((error) => {
-					console.error("API通信エラー:", error);
-				});
-
+			const { liked, count } = updateReaction(prevState);
+			sendReactionToApi(id, liked);
 			return {
 				...prev,
 				[id]: { liked, count },
