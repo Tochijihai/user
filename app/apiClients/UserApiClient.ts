@@ -56,6 +56,30 @@ class UserApiClient {
 			throw error;
 		}
 	}
+
+	// PUTメソッド。body と response の型を動的に設定
+	public async put<T, S>(
+		path: string,
+		requestBody?: S,
+	): Promise<ApiResponse<T>> {
+		try {
+			const response = await axios.put<T>(
+				`${this.baseURL}${path}`,
+				requestBody,
+				{
+					headers: this.headers,
+				},
+			);
+
+			return {
+				statusCode: response.status,
+				data: response.data,
+			};
+		} catch (error) {
+			console.error("API call error:", error);
+			throw error;
+		}
+	}
 }
 
 // インスタンスをエクスポート

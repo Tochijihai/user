@@ -138,13 +138,24 @@ export default function LocationMap() {
 		}
 	}, [selected, fetchComments]);
 
-	const toggleLike = (id: string) => {
+	const toggleLike = async (id: string) => {
 		setReactions((prev) => {
 			const prevState = prev[id];
 			const liked = !prevState.liked;
 			const count = liked
 				? prevState.count + 1
 				: Math.max(0, prevState.count - 1);
+
+			// API通信を追加
+			userApiClient
+				.put(`/user/opinions/${id}/reactions`, {
+					mailAddress: userInfo.mailAddress,
+					reaction: liked,
+				})
+				.catch((error) => {
+					console.error("API通信エラー:", error);
+				});
+
 			return {
 				...prev,
 				[id]: { liked, count },
