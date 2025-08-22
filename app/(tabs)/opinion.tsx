@@ -15,6 +15,15 @@ import { Colors } from "@/constants/Colors"; // Colors.tsをインポート
 import { userInfo } from "@/testUserInfo";
 import { userApiClient } from "../apiClients/UserApiClient";
 
+const Loading = () => (
+	<PaperProvider>
+		<View style={styles.center}>
+			<ActivityIndicator animating size="large" />
+			<Text>位置情報を取得中...</Text>
+		</View>
+	</PaperProvider>
+);
+
 export default function OpinionScreen() {
 	const [location, setLocation] = useState<Location.LocationObject | null>(
 		null,
@@ -66,15 +75,6 @@ export default function OpinionScreen() {
 			setSending(false);
 		}
 	};
-
-	const Loading = () => (
-		<PaperProvider>
-			<View style={styles.center}>
-				<ActivityIndicator animating size="large" />
-				<Text>位置情報を取得中...</Text>
-			</View>
-		</PaperProvider>
-	);
 
 	const DefaultView = () => (
 		<KeyboardAvoidingView
