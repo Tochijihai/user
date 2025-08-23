@@ -15,8 +15,8 @@ import {
 	TouchableOpacity,
 	View,
 } from "react-native";
-import MapView, { Marker, PROVIDER_GOOGLE } from "react-native-maps";
 import { userInfo } from "@/testUserInfo";
+import OpenStreetMap from "../../components/OpenStreetMap";
 import { userApiClient } from "../apiClients/UserApiClient";
 
 const windowHeight = Dimensions.get("window").height;
@@ -239,31 +239,22 @@ export default function LocationMap() {
 			behavior={Platform.OS === "ios" ? "padding" : "height"}
 		>
 			<View style={{ flex: 1 }}>
-				<MapView
-					style={{ flex: 1 }}
-					provider={PROVIDER_GOOGLE}
+				<OpenStreetMap
+					markerCoords={null}
+					setMarkerCoords={() => {}}
 					initialRegion={{
 						latitude: location.coords.latitude,
 						longitude: location.coords.longitude,
 						latitudeDelta: 0.01,
 						longitudeDelta: 0.01,
 					}}
+					markers={posts}
 					onPress={() => setSelected(null)}
-				>
-					{posts.map((post, idx) => (
-						<Marker
-							key={`${post.id}-${idx}`}
-							coordinate={{
-								latitude: post.latitude,
-								longitude: post.longitude,
-							}}
-							title={post.title}
-							description={post.description}
-							onPress={() => setSelected(post)}
-							image={require("../../assets/images/post.png")}
-						/>
-					))}
-				</MapView>
+					onMarkerPress={(markerId) => {
+						const post = posts.find((p) => p.id === markerId);
+						if (post) setSelected(post);
+					}}
+				/>
 
 				<TouchableOpacity
 					style={styles.refreshButton}
