@@ -54,6 +54,15 @@ export default function OpenStreetMap({
       <style>
         body { margin: 0; padding: 0; }
         #map { height: 100vh; width: 100vw; }
+        
+        .leaflet-control-zoom {
+          position: fixed !important;
+          top: auto !important;
+          bottom: 30px !important;
+          left: 15px !important;
+          z-index: 1000 !important;
+        }
+        
       </style>
     </head>
     <body>
@@ -64,7 +73,14 @@ export default function OpenStreetMap({
         let markers = [];
 
         function initMap() {
-          map = L.map('map').setView([${initialRegion.latitude}, ${initialRegion.longitude}], 15);
+          map = L.map('map', {
+            zoomControl: false  // デフォルトのズームコントロールを無効化
+          }).setView([${initialRegion.latitude}, ${initialRegion.longitude}], 15);
+          
+          // カスタムズームコントロールを下部に追加
+          L.control.zoom({
+            position: 'bottomleft'
+          }).addTo(map);
           
           L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
             attribution: '© OpenStreetMap contributors'
