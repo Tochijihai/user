@@ -37,15 +37,9 @@ export default function LocationMap({
 			const { status } = await Location.requestForegroundPermissionsAsync();
 			if (status !== "granted") return;
 
-			if (onLocationLoaded) onLocationLoaded(location!);
-			if (!markerCoords) {
-				setMarkerCoords({
-					latitude: location!.coords.latitude,
-					longitude: location!.coords.longitude,
-				});
-			}
+			if (onLocationLoaded && location) onLocationLoaded(location);
 		})();
-	}, [setMarkerCoords, markerCoords, onLocationLoaded, location]);
+	}, [onLocationLoaded, location]);
 
 	if (!location) {
 		return (
@@ -56,13 +50,19 @@ export default function LocationMap({
 		);
 	}
 
+	// マーカーが設定されている場合はマーカー位置を中心に、そうでなければ現在地を中心に
+	const mapCenter = markerCoords || {
+		latitude: location.coords.latitude,
+		longitude: location.coords.longitude,
+	};
+
 	return (
 		<OpenStreetMap
 			markerCoords={markerCoords}
 			setMarkerCoords={setMarkerCoords}
 			initialRegion={{
-				latitude: location.coords.latitude,
-				longitude: location.coords.longitude,
+				latitude: mapCenter.latitude,
+				longitude: mapCenter.longitude,
 				latitudeDelta: 0.01,
 				longitudeDelta: 0.01,
 			}}
