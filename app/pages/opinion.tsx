@@ -12,10 +12,11 @@ import {
 	TextInput,
 } from "react-native-paper";
 import LocationMap from "@/components/LocationMap";
-import { Colors } from "@/constants/Colors"; // Colors.tsをインポート
+import { Colors } from "@/constants/Colors";
 import { userInfo } from "@/testUserInfo";
 import { userApiClient } from "../apiClients/UserApiClient";
 import { useLocationContext } from "../contexts/LocationContext";
+import { useOpinionContext } from "../contexts/OpinionContext";
 
 const Loading = () => (
 	<PaperProvider>
@@ -28,6 +29,7 @@ const Loading = () => (
 
 export default function OpinionScreen() {
 	const { location, setLocation } = useLocationContext();
+	const { triggerRefresh } = useOpinionContext();
 
 	const [feedback, setFeedback] = useState("");
 	const [sending, setSending] = useState(false);
@@ -66,8 +68,11 @@ export default function OpinionScreen() {
 			};
 
 			await userApiClient.post("/user/opinions", {}, body);
-			alert("意見を送信しました！");
 			setFeedback("");
+			// メイン画面の意見一覧更新をトリガー
+			triggerRefresh();
+			// 投稿成功のフィードバックを表示してから前の画面に戻る
+			alert("意見を送信しました！");
 			router.back();
 		} catch (error) {
 			alert(`意見の送信に失敗しました。${error}`);

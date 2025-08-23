@@ -9,6 +9,8 @@ import { StatusBar } from "expo-status-bar";
 import "react-native-reanimated";
 
 import { useColorScheme } from "@/hooks/useColorScheme";
+import { LocationProvider } from "./contexts/LocationContext";
+import { OpinionProvider } from "./contexts/OpinionContext";
 
 export default function RootLayout() {
 	const colorScheme = useColorScheme();
@@ -22,16 +24,22 @@ export default function RootLayout() {
 	}
 
 	return (
-		<ThemeProvider value={colorScheme === "dark" ? DarkTheme : DefaultTheme}>
-			<Stack
-				screenOptions={{
-					headerTitle: "", // 上部タイトルを非表示
-				}}
-			>
-				<Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-				<Stack.Screen name="+not-found" />
-			</Stack>
-			<StatusBar style="auto" />
-		</ThemeProvider>
+		<LocationProvider>
+			<OpinionProvider>
+				<ThemeProvider
+					value={colorScheme === "dark" ? DarkTheme : DefaultTheme}
+				>
+					<Stack
+						screenOptions={{
+							headerTitle: "", // 上部タイトルを非表示
+						}}
+					>
+						<Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+						<Stack.Screen name="+not-found" />
+					</Stack>
+					<StatusBar style="auto" />
+				</ThemeProvider>
+			</OpinionProvider>
+		</LocationProvider>
 	);
 }
