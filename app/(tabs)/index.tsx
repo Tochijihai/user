@@ -18,6 +18,7 @@ import {
 import { userInfo } from "@/testUserInfo";
 import OpenStreetMap from "../../components/OpenStreetMap";
 import { userApiClient } from "../apiClients/UserApiClient";
+import { useLocationContext } from "../conntexts/LocationContext";
 
 const windowHeight = Dimensions.get("window").height;
 
@@ -62,9 +63,7 @@ type ReactionInfo = {
 };
 
 export default function LocationMap() {
-	const [location, setLocation] = useState<Location.LocationObject | null>(
-		null,
-	);
+	const { location, setLocation } = useLocationContext();
 	const [posts, setPosts] = useState<Spot[]>([]);
 	const [selected, setSelected] = useState<Spot | null>(null);
 	const [loading, setLoading] = useState(false);
@@ -171,7 +170,7 @@ export default function LocationMap() {
 			setLocation(loc);
 			await fetchOpinion();
 		})();
-	}, [fetchOpinion]);
+	}, [fetchOpinion, setLocation]);
 
 	useEffect(() => {
 		if (selected?.id) {

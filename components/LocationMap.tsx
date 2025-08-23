@@ -1,6 +1,7 @@
 import * as Location from "expo-location";
 import { useEffect, useState } from "react";
 import { ActivityIndicator, StyleSheet, Text, View } from "react-native";
+import { useLocationContext } from "@/app/conntexts/LocationContext";
 import OpenStreetMap from "./OpenStreetMap";
 
 type LatLng = {
@@ -29,26 +30,22 @@ export default function LocationMap({
 	markers = [],
 	onMarkerPress,
 }: Props) {
-	const [location, setLocation] = useState<Location.LocationObject | null>(
-		null,
-	);
+	const { location, setLocation } = useLocationContext();
 
 	useEffect(() => {
 		(async () => {
 			const { status } = await Location.requestForegroundPermissionsAsync();
 			if (status !== "granted") return;
 
-			const loc = await Location.getCurrentPositionAsync({});
-			setLocation(loc);
-			if (onLocationLoaded) onLocationLoaded(loc);
+			if (onLocationLoaded) onLocationLoaded(location!);
 			if (!markerCoords) {
 				setMarkerCoords({
-					latitude: loc.coords.latitude,
-					longitude: loc.coords.longitude,
+					latitude: location!.coords.latitude,
+					longitude: location!.coords.longitude,
 				});
 			}
 		})();
-	}, [setMarkerCoords, markerCoords, onLocationLoaded]);
+	}, [setMarkerCoords, markerCoords, onLocationLoaded, location]);
 
 	if (!location) {
 		return (

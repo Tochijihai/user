@@ -15,6 +15,7 @@ import LocationMap from "@/components/LocationMap";
 import { Colors } from "@/constants/Colors"; // Colors.tsをインポート
 import { userInfo } from "@/testUserInfo";
 import { userApiClient } from "../apiClients/UserApiClient";
+import { useLocationContext } from "../conntexts/LocationContext";
 
 const Loading = () => (
 	<PaperProvider>
@@ -26,9 +27,8 @@ const Loading = () => (
 );
 
 export default function OpinionScreen() {
-	const [location, setLocation] = useState<Location.LocationObject | null>(
-		null,
-	);
+	const { location, setLocation } = useLocationContext();
+
 	const [feedback, setFeedback] = useState("");
 	const [sending, setSending] = useState(false);
 
@@ -40,14 +40,12 @@ export default function OpinionScreen() {
 			const { status } = await Location.requestForegroundPermissionsAsync();
 			if (status !== "granted") return;
 
-			const loc = await Location.getCurrentPositionAsync({});
-			setLocation(loc);
 			setMarkerCoords({
-				latitude: loc.coords.latitude,
-				longitude: loc.coords.longitude,
+				latitude: location!.coords.latitude,
+				longitude: location!.coords.longitude,
 			});
 		})();
-	}, []);
+	}, [location]);
 
 	// 意見を送信する関数
 	const handleSendOpinion = async () => {
