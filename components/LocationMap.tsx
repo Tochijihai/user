@@ -1,7 +1,7 @@
 import * as Location from "expo-location";
 import React, { useEffect, useState } from "react";
 import { ActivityIndicator, StyleSheet, Text, View } from "react-native";
-import MapView, { Marker, PROVIDER_GOOGLE } from "react-native-maps";
+import OpenStreetMap from "./OpenStreetMap";
 
 type LatLng = {
 	latitude: number;
@@ -12,12 +12,22 @@ type Props = {
 	markerCoords: LatLng | null;
 	setMarkerCoords: (coords: LatLng) => void;
 	onLocationLoaded?: (location: Location.LocationObject) => void;
+	markers?: Array<{
+		id: string;
+		latitude: number;
+		longitude: number;
+		title?: string;
+		description?: string;
+	}>;
+	onMarkerPress?: (markerId: string) => void;
 };
 
 export default function LocationMap({
 	markerCoords,
 	setMarkerCoords,
 	onLocationLoaded,
+	markers = [],
+	onMarkerPress,
 }: Props) {
 	const [location, setLocation] = useState<Location.LocationObject | null>(
 		null,
@@ -50,33 +60,18 @@ export default function LocationMap({
 	}
 
 	return (
-		<MapView
-			style={{ flex: 1 }}
-			provider={PROVIDER_GOOGLE}
+		<OpenStreetMap
+			markerCoords={markerCoords}
+			setMarkerCoords={setMarkerCoords}
 			initialRegion={{
 				latitude: location.coords.latitude,
 				longitude: location.coords.longitude,
 				latitudeDelta: 0.01,
 				longitudeDelta: 0.01,
 			}}
-			onPress={(e) => {
-				const { latitude, longitude } = e.nativeEvent.coordinate;
-				setMarkerCoords({ latitude, longitude });
-			}}
-		>
-			{markerCoords && (
-				<Marker
-					coordinate={markerCoords}
-					draggable
-					onDragEnd={(e) => {
-						const { latitude, longitude } = e.nativeEvent.coordinate;
-						setMarkerCoords({ latitude, longitude });
-					}}
-					title="選択した位置"
-					description="この場所に意見を送信します"
-				/>
-			)}
-		</MapView>
+			markers={markers}
+			onMarkerPress={onMarkerPress}
+		/>
 	);
 }
 
