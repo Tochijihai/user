@@ -1,6 +1,6 @@
 import { useRef, useState } from "react";
 import { ActivityIndicator, StyleSheet, Text, View } from "react-native";
-import { WebView } from "react-native-webview";
+import { WebView, type WebViewMessageEvent } from "react-native-webview";
 
 type LatLng = {
 	latitude: number;
@@ -246,7 +246,7 @@ export default function OpenStreetMap({
     </html>
   `;
 
-	const handleMessage = (event: any) => {
+	const handleMessage = (event: WebViewMessageEvent) => {
 		try {
 			const data = JSON.parse(event.nativeEvent.data);
 

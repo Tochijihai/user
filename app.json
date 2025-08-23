@@ -18,12 +18,7 @@
 				"backgroundColor": "#ffffff"
 			},
 			"edgeToEdgeEnabled": true,
-			"package": "user",
-			"config": {
-				"googleMaps": {
-					"apiKey": "API_KEY"
-				}
-			}
+			"package": "user"
 		},
 		"web": {
 			"bundler": "metro",
