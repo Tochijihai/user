@@ -1,5 +1,4 @@
 import { Tabs } from "expo-router";
-import React from "react";
 import { Platform } from "react-native";
 
 import { HapticTab } from "@/components/HapticTab";
@@ -32,7 +31,11 @@ export default function TabLayout() {
 				options={{
 					title: "都へのコメント",
 					tabBarIcon: ({ color }) => (
-						<IconSymbol size={28} name="bubble.left.and.bubble.right.fill" color={color} />
+						<IconSymbol
+							size={28}
+							name="bubble.left.and.bubble.right.fill"
+							color={color}
+						/>
 					),
 				}}
 			/>
