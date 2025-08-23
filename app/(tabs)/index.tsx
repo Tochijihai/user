@@ -2,7 +2,7 @@ import { FontAwesome } from "@expo/vector-icons";
 import { faker } from "@faker-js/faker/locale/ja";
 import * as Location from "expo-location";
 import { router } from "expo-router";
-import { useCallback, useEffect, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import {
 	ActivityIndicator,
 	Dimensions,
@@ -48,6 +48,7 @@ type DisplayComment = {
 	author: string;
 	comment: string;
 	createdAt: string;
+	avatarUrl?: string;
 };
 
 type Opinion = {
@@ -65,7 +66,7 @@ type ReactionInfo = {
 	ReactionCount: number;
 };
 
-export default function LocationMap() {
+function LocationMap() {
 	const { location, setLocation } = useLocationContext();
 	const { shouldRefresh, resetRefresh } = useOpinionContext();
 	const [posts, setPosts] = useState<Spot[]>([]);
@@ -111,6 +112,8 @@ export default function LocationMap() {
 					author: data?.Author ?? faker.person.fullName(),
 					comment: data.Comment,
 					createdAt: data.CreatedDateTime,
+					// TODO: 仮で自動生成
+					avatarUrl: faker.image.personPortrait(),
 				})) ?? [];
 			setCommentsByPost((prev) => ({
 				...prev,
@@ -193,32 +196,31 @@ export default function LocationMap() {
 		}
 	}, [selected, fetchComments, fetchReactions]);
 
-	const renderComment = ({ item }: { item: DisplayComment }) => (
-		<View key={item.commentId} style={styles.commentRow}>
-			<View style={styles.avatar}>
-				{/* TODO: 仮で自動生成 */}
-				<Image
-					style={styles.avatar}
-					source={{ uri: faker.image.personPortrait() }}
-				/>
+	const renderComment = useCallback(
+		({ item }: { item: DisplayComment }) => (
+			<View key={item.commentId} style={styles.commentRow}>
+				<View style={styles.avatar}>
+					<Image style={styles.avatar} source={{ uri: item.avatarUrl }} />
+				</View>
+				<View style={{ flex: 1, marginLeft: 8 }}>
+					<Text style={styles.commentAuthor}>{item.author}</Text>
+					<Text>{item.comment}</Text>
+					<Text style={styles.timestamp}>
+						{new Date(item.createdAt).toLocaleDateString("ja-JP", {
+							year: "numeric",
+							month: "2-digit",
+							day: "2-digit",
+						})}{" "}
+						{new Date(item.createdAt).toLocaleTimeString(undefined, {
+							hour12: false,
+							hour: "2-digit",
+							minute: "2-digit",
+						})}
+					</Text>
+				</View>
 			</View>
-			<View style={{ flex: 1, marginLeft: 8 }}>
-				<Text style={styles.commentAuthor}>{item.author}</Text>
-				<Text>{item.comment}</Text>
-				<Text style={styles.timestamp}>
-					{new Date(item.createdAt).toLocaleDateString("ja-JP", {
-						year: "numeric",
-						month: "2-digit",
-						day: "2-digit",
-					})}{" "}
-					{new Date(item.createdAt).toLocaleTimeString(undefined, {
-						hour12: false,
-						hour: "2-digit",
-						minute: "2-digit",
-					})}
-				</Text>
-			</View>
-		</View>
+		),
+		[],
 	);
 
 	const handleCommentSubmit = async () => {
@@ -345,6 +347,14 @@ export default function LocationMap() {
 									}
 									renderItem={renderComment}
 									nestedScrollEnabled
+									removeClippedSubviews={true}
+									maxToRenderPerBatch={10}
+									windowSize={10}
+									getItemLayout={(_data, index) => ({
+										length: 60,
+										offset: 60 * index,
+										index,
+									})}
 								/>
 							) : (
 								<Text style={{ color: "#666" }}>コメントはまだありません</Text>
@@ -480,3 +490,5 @@ const styles = StyleSheet.create({
 		shadowRadius: 4,
 	},
 });
+
+export default React.memo(LocationMap);
