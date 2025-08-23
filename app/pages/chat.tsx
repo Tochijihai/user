@@ -1,4 +1,3 @@
-// src/screens/ChatScreen.tsx （素朴版 + /chat POST）
 import React, { useState, useRef } from 'react';
 import { SafeAreaView, View, Text, TextInput, FlatList, Pressable, Platform } from 'react-native';
 
@@ -105,7 +104,7 @@ export default function ChatScreen() {
           <View style={{ padding: 8, alignItems: item.from === 'me' ? 'flex-end' : 'flex-start' }}>
             <View
               style={{
-                backgroundColor: item.from === 'me' ? '#007aff' : '#e5e5ea',
+                backgroundColor: item.from === 'me' ? '#17882e' : '#e5e5ea',
                 paddingHorizontal: 12,
                 paddingVertical: 8,
                 borderRadius: 16,
@@ -119,7 +118,7 @@ export default function ChatScreen() {
         contentContainerStyle={{ paddingVertical: 8 }}
       />
 
-      <View style={{ flexDirection: 'row', padding: 8, gap: 8 }}>
+      <View style={{ flexDirection: 'row', padding: 8, gap: 8, marginBottom: 30 }}>
         <TextInput
           ref={inputRef}
           value={text}
@@ -142,7 +141,7 @@ export default function ChatScreen() {
             height: 40,
             paddingHorizontal: 16,
             borderRadius: 20,
-            backgroundColor: '#007aff',
+            backgroundColor: '#17882e',
             alignItems: 'center',
             justifyContent: 'center',
           }}
