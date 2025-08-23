@@ -68,6 +68,10 @@ export default function LocationMap({
 			}}
 			markers={markers}
 			onMarkerPress={onMarkerPress}
+			currentLocation={{
+				latitude: location.coords.latitude,
+				longitude: location.coords.longitude,
+			}}
 		/>
 	);
 }
