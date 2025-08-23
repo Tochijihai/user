@@ -4,10 +4,13 @@ import {
 	FlatList,
 	Pressable,
 	SafeAreaView,
+	StyleSheet,
 	Text,
 	TextInput,
 	View,
 } from "react-native";
+import { Colors } from "@/constants/Colors";
+import { useColorScheme } from "@/hooks/useColorScheme";
 
 // ===== Types =====
 type Msg = { id: string; text: string; from: "me" | "bot"; createdAt: number };
@@ -42,8 +45,17 @@ const CHAT_ENDPOINT = `${API_BASE_URL}/user-chat/chat`;
 const MAIL_ADDRESS = "test@example.com"; // sample に合わせる
 
 export default function ChatScreen() {
+	const colorScheme = useColorScheme();
+	const colors = Colors[colorScheme ?? "light"];
+	const styles = createStyles(colors);
+
 	const [messages, setMessages] = useState<Msg[]>([
-		{ id: "1", text: "こんにちは！", from: "bot", createdAt: Date.now() },
+		{
+			id: "1",
+			text: "こんにちは！東京都への意見やご質問をお聞かせください。",
+			from: "bot",
+			createdAt: Date.now(),
+		},
 	]);
 	const [text, setText] = useState("");
 	const inputRef = useRef<TextInput>(null);
@@ -200,69 +212,175 @@ export default function ChatScreen() {
 	};
 
 	return (
-		<SafeAreaView style={{ flex: 1 }}>
+		<SafeAreaView style={styles.container}>
+			<View style={styles.header}>
+				<Text style={styles.headerTitle}>東京都チャットサポート</Text>
+				<Text style={styles.headerSubtitle}>
+					ご質問やご意見をお聞かせください
+				</Text>
+			</View>
+
 			<FlatList
 				inverted
 				data={messages}
 				keyExtractor={(item) => item.id}
 				renderItem={({ item }) => (
-					<View
-						style={{
-							padding: 8,
-							alignItems: item.from === "me" ? "flex-end" : "flex-start",
-						}}
-					>
+					<View style={styles.messageContainer}>
 						<View
-							style={{
-								backgroundColor: item.from === "me" ? "#17882e" : "#e5e5ea",
-								paddingHorizontal: 12,
-								paddingVertical: 8,
-								borderRadius: 16,
-								maxWidth: "80%",
-							}}
+							style={[
+								styles.messageBubble,
+								item.from === "me" ? styles.myMessage : styles.botMessage,
+							]}
 						>
-							<Text style={{ color: item.from === "me" ? "#fff" : "#000" }}>
+							<Text
+								style={[
+									styles.messageText,
+									item.from === "me"
+										? styles.myMessageText
+										: styles.botMessageText,
+								]}
+							>
 								{item.text}
 							</Text>
 						</View>
 					</View>
 				)}
-				contentContainerStyle={{ paddingVertical: 8 }}
+				contentContainerStyle={styles.messagesList}
 			/>
 
-			<View
-				style={{ flexDirection: "row", padding: 8, gap: 8, marginBottom: 30 }}
-			>
+			<View style={styles.inputContainer}>
 				<TextInput
 					ref={inputRef}
 					value={text}
 					onChangeText={setText}
-					placeholder="メッセージを入力"
-					style={{
-						flex: 1,
-						borderWidth: 1,
-						borderColor: "#ccc",
-						borderRadius: 20,
-						paddingHorizontal: 12,
-						height: 40,
-					}}
+					placeholder="メッセージを入力してください..."
+					style={styles.textInput}
 					onSubmitEditing={send}
 					returnKeyType="send"
+					multiline
 				/>
-				<Pressable
-					onPress={send}
-					style={{
-						height: 40,
-						paddingHorizontal: 16,
-						borderRadius: 20,
-						backgroundColor: "#17882e",
-						alignItems: "center",
-						justifyContent: "center",
-					}}
-				>
-					<Text style={{ color: "white", fontWeight: "600" }}>送信</Text>
+				<Pressable onPress={send} style={styles.sendButton}>
+					<Text style={styles.sendButtonText}>送信</Text>
 				</Pressable>
 			</View>
 		</SafeAreaView>
 	);
 }
+
+// 東京都アプリスタイルのスタイルシート
+const createStyles = (colors: any) =>
+	StyleSheet.create({
+		container: {
+			flex: 1,
+			backgroundColor: colors.tokyoLightGreen,
+		},
+		header: {
+			backgroundColor: colors.tokyoGreen,
+			paddingVertical: 16,
+			paddingHorizontal: 20,
+			borderBottomLeftRadius: 16,
+			borderBottomRightRadius: 16,
+			elevation: 4,
+			shadowColor: colors.shadowColor,
+			shadowOpacity: 0.1,
+			shadowRadius: 4,
+		},
+		headerTitle: {
+			color: "white",
+			fontSize: 20,
+			fontWeight: "700",
+			textAlign: "center",
+		},
+		headerSubtitle: {
+			color: "white",
+			fontSize: 14,
+			textAlign: "center",
+			marginTop: 4,
+			opacity: 0.9,
+		},
+		messagesList: {
+			paddingVertical: 12,
+			paddingHorizontal: 8,
+		},
+		messageContainer: {
+			padding: 8,
+			alignItems: "flex-start",
+		},
+		messageBubble: {
+			paddingHorizontal: 16,
+			paddingVertical: 12,
+			borderRadius: 20,
+			maxWidth: "85%",
+			elevation: 2,
+			shadowColor: colors.shadowColor,
+			shadowOpacity: 0.1,
+			shadowRadius: 2,
+		},
+		myMessage: {
+			backgroundColor: colors.tokyoGreen,
+			alignSelf: "flex-end",
+			borderBottomRightRadius: 6,
+		},
+		botMessage: {
+			backgroundColor: "white",
+			alignSelf: "flex-start",
+			borderBottomLeftRadius: 6,
+			borderLeftWidth: 3,
+			borderLeftColor: colors.tokyoGreenLight,
+		},
+		messageText: {
+			fontSize: 16,
+			lineHeight: 22,
+		},
+		myMessageText: {
+			color: "white",
+			fontWeight: "500",
+		},
+		botMessageText: {
+			color: colors.text,
+			fontWeight: "400",
+		},
+		inputContainer: {
+			flexDirection: "row",
+			padding: 12,
+			gap: 12,
+			marginBottom: 20,
+			backgroundColor: "white",
+			marginHorizontal: 8,
+			borderRadius: 16,
+			elevation: 4,
+			shadowColor: colors.shadowColor,
+			shadowOpacity: 0.1,
+			shadowRadius: 4,
+			borderTopWidth: 2,
+			borderTopColor: colors.tokyoGreen,
+		},
+		textInput: {
+			flex: 1,
+			borderWidth: 1,
+			borderColor: colors.tokyoLightGreen,
+			borderRadius: 12,
+			paddingHorizontal: 16,
+			paddingVertical: 12,
+			fontSize: 16,
+			backgroundColor: colors.tokyoLightGreen,
+			maxHeight: 100,
+		},
+		sendButton: {
+			paddingHorizontal: 20,
+			paddingVertical: 12,
+			borderRadius: 12,
+			backgroundColor: colors.tokyoGreen,
+			alignItems: "center",
+			justifyContent: "center",
+			elevation: 2,
+			shadowColor: colors.shadowColor,
+			shadowOpacity: 0.2,
+			shadowRadius: 2,
+		},
+		sendButtonText: {
+			color: "white",
+			fontWeight: "700",
+			fontSize: 16,
+		},
+	});

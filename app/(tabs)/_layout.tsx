@@ -9,11 +9,13 @@ import { useColorScheme } from "@/hooks/useColorScheme";
 
 export default function TabLayout() {
 	const colorScheme = useColorScheme();
+	const colors = Colors[colorScheme ?? "light"];
 
 	return (
 		<Tabs
 			screenOptions={{
-				tabBarActiveTintColor: Colors[colorScheme ?? "light"].tint,
+				tabBarActiveTintColor: colors.tokyoGreen,
+				tabBarInactiveTintColor: colors.icon,
 				headerShown: false,
 				tabBarButton: HapticTab,
 				tabBarBackground: TabBarBackground,
@@ -21,9 +23,24 @@ export default function TabLayout() {
 					ios: {
 						// Use a transparent background on iOS to show the blur effect
 						position: "absolute",
+						backgroundColor: "rgba(255, 255, 255, 0.9)",
+						borderTopWidth: 1,
+						borderTopColor: colors.tokyoLightGreen,
 					},
-					default: {},
+					default: {
+						backgroundColor: "white",
+						borderTopWidth: 2,
+						borderTopColor: colors.tokyoGreen,
+						elevation: 8,
+						shadowColor: colors.shadowColor,
+						shadowOpacity: 0.1,
+						shadowRadius: 4,
+					},
 				}),
+				tabBarLabelStyle: {
+					fontSize: 12,
+					fontWeight: "600",
+				},
 			}}
 		>
 			<Tabs.Screen
