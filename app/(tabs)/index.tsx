@@ -1,5 +1,6 @@
 import { FontAwesome } from "@expo/vector-icons";
 import * as Location from "expo-location";
+import { router } from "expo-router";
 import { useCallback, useEffect, useState } from "react";
 import {
 	ActivityIndicator,
@@ -266,6 +267,17 @@ export default function LocationMap() {
 						<FontAwesome name="refresh" size={24} color="white" />
 					)}
 				</TouchableOpacity>
+				<TouchableOpacity
+					style={styles.opinionButton}
+					onPress={() => router.push("/pages/opinion")}
+					disabled={loading}
+				>
+					{loading ? (
+						<ActivityIndicator color="white" />
+					) : (
+						<FontAwesome name="paper-plane" size={24} color="white" />
+					)}
+				</TouchableOpacity>
 
 				{selected && (
 					<View style={styles.card}>
@@ -394,6 +406,21 @@ const styles = StyleSheet.create({
 	refreshButton: {
 		position: "absolute",
 		bottom: 30,
+		right: 20,
+		backgroundColor: "#007AFF",
+		width: 56,
+		height: 56,
+		borderRadius: 28,
+		alignItems: "center",
+		justifyContent: "center",
+		elevation: 6,
+		shadowColor: "#000",
+		shadowOpacity: 0.3,
+		shadowRadius: 4,
+	},
+	opinionButton: {
+		position: "absolute",
+		bottom: 30 + 56 + 10,
 		right: 20,
 		backgroundColor: "#007AFF",
 		width: 56,

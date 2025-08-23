@@ -1,4 +1,5 @@
 import * as Location from "expo-location";
+import { router } from "expo-router";
 import React, { useEffect, useState } from "react";
 import { KeyboardAvoidingView, Platform, StyleSheet, View } from "react-native";
 import type { LatLng } from "react-native-maps";
@@ -14,6 +15,15 @@ import LocationMap from "@/components/LocationMap";
 import { Colors } from "@/constants/Colors"; // Colors.tsをインポート
 import { userInfo } from "@/testUserInfo";
 import { userApiClient } from "../apiClients/UserApiClient";
+
+const Loading = () => (
+	<PaperProvider>
+		<View style={styles.center}>
+			<ActivityIndicator animating size="large" />
+			<Text>位置情報を取得中...</Text>
+		</View>
+	</PaperProvider>
+);
 
 export default function OpinionScreen() {
 	const [location, setLocation] = useState<Location.LocationObject | null>(
@@ -60,21 +70,13 @@ export default function OpinionScreen() {
 			await userApiClient.post("/user/opinions", {}, body);
 			alert("意見を送信しました！");
 			setFeedback("");
+			router.back();
 		} catch (error) {
 			alert(`意見の送信に失敗しました。${error}`);
 		} finally {
 			setSending(false);
 		}
 	};
-
-	const Loading = () => (
-		<PaperProvider>
-			<View style={styles.center}>
-				<ActivityIndicator animating size="large" />
-				<Text>位置情報を取得中...</Text>
-			</View>
-		</PaperProvider>
-	);
 
 	const DefaultView = () => (
 		<KeyboardAvoidingView
