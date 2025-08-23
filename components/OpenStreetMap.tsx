@@ -25,6 +25,7 @@ type Props = {
 		description?: string;
 	}>;
 	onMarkerPress?: (markerId: string) => void;
+	disableMapClick?: boolean;
 };
 
 export default function OpenStreetMap({
@@ -34,6 +35,7 @@ export default function OpenStreetMap({
 	onPress,
 	markers = [],
 	onMarkerPress,
+	disableMapClick = false,
 }: Props) {
 	const webViewRef = useRef<WebView>(null);
 	const [isLoading, setIsLoading] = useState(true);
@@ -65,6 +67,9 @@ export default function OpenStreetMap({
             attribution: '© OpenStreetMap contributors'
           }).addTo(map);
 
+          ${
+						!disableMapClick
+							? `
           map.on('click', function(e) {
             const lat = e.latlng.lat;
             const lng = e.latlng.lng;
@@ -93,6 +98,9 @@ export default function OpenStreetMap({
               longitude: lng
             }));
           });
+          `
+							: ""
+					}
 
           // 初期マーカーの設定
           ${
