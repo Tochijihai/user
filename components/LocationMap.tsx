@@ -1,5 +1,5 @@
 import * as Location from "expo-location";
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { ActivityIndicator, StyleSheet, Text, View } from "react-native";
 import OpenStreetMap from "./OpenStreetMap";
 
