@@ -21,6 +21,7 @@ import { userInfo } from "@/testUserInfo";
 import OpenStreetMap from "../../components/OpenStreetMap";
 import { userApiClient } from "../apiClients/UserApiClient";
 import { useLocationContext } from "../contexts/LocationContext";
+import { useOpinionContext } from "../contexts/OpinionContext";
 
 const windowHeight = Dimensions.get("window").height;
 
@@ -66,6 +67,7 @@ type ReactionInfo = {
 
 export default function LocationMap() {
 	const { location, setLocation } = useLocationContext();
+	const { shouldRefresh, resetRefresh } = useOpinionContext();
 	const [posts, setPosts] = useState<Spot[]>([]);
 	const [selected, setSelected] = useState<Spot | null>(null);
 	const [loading, setLoading] = useState(false);
@@ -175,6 +177,14 @@ export default function LocationMap() {
 			await fetchOpinion();
 		})();
 	}, [fetchOpinion, setLocation]);
+
+	// OpinionContextからの更新要求を監視
+	useEffect(() => {
+		if (shouldRefresh && location) {
+			fetchOpinion();
+			resetRefresh();
+		}
+	}, [shouldRefresh, location, fetchOpinion, resetRefresh]);
 
 	useEffect(() => {
 		if (selected?.id) {
