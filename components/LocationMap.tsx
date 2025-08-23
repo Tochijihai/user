@@ -1,5 +1,5 @@
 import * as Location from "expo-location";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { ActivityIndicator, StyleSheet, Text, View } from "react-native";
 import { useLocationContext } from "@/app/contexts/LocationContext";
 import OpenStreetMap from "./OpenStreetMap";
@@ -31,6 +31,7 @@ export default function LocationMap({
 	onMarkerPress,
 }: Props) {
 	const { location, setLocation } = useLocationContext();
+	const [mapKey, setMapKey] = useState(0);
 
 	useEffect(() => {
 		(async () => {
@@ -40,6 +41,16 @@ export default function LocationMap({
 			if (onLocationLoaded && location) onLocationLoaded(location);
 		})();
 	}, [onLocationLoaded, location]);
+
+	// 画面がフォーカスされた時に地図を再初期化
+	useEffect(() => {
+		const refreshMap = () => {
+			setMapKey((prev) => prev + 1);
+		};
+
+		// コンポーネントがマウントされた時に地図をリフレッシュ
+		refreshMap();
+	}, []);
 
 	if (!location) {
 		return (
@@ -58,6 +69,7 @@ export default function LocationMap({
 
 	return (
 		<OpenStreetMap
+			key={`map-${mapKey}-${location?.timestamp || 0}`}
 			markerCoords={markerCoords}
 			setMarkerCoords={setMarkerCoords}
 			initialRegion={{

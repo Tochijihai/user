@@ -41,6 +41,7 @@ export default function OpenStreetMap({
 }: Props) {
 	const webViewRef = useRef<WebView>(null);
 	const [isLoading, setIsLoading] = useState(true);
+	const [mapKey, setMapKey] = useState(0);
 
 	const htmlContent = `
     <!DOCTYPE html>
@@ -195,7 +196,35 @@ export default function OpenStreetMap({
           });
         }
 
+        function refreshMap() {
+          if (map) {
+            setTimeout(() => {
+              map.invalidateSize();
+              map.setView([${initialRegion.latitude}, ${initialRegion.longitude}], 15);
+            }, 100);
+          }
+        }
+
+        // メッセージリスナーを追加
+        window.addEventListener('message', function(event) {
+          try {
+            const data = JSON.parse(event.data);
+            if (data.type === 'refresh') {
+              refreshMap();
+            }
+          } catch (e) {
+            // メッセージの解析に失敗した場合は無視
+          }
+        });
+
         document.addEventListener('DOMContentLoaded', initMap);
+        
+        // ページが表示された時に地図をリフレッシュ
+        document.addEventListener('visibilitychange', function() {
+          if (!document.hidden) {
+            refreshMap();
+          }
+        });
       </script>
     </body>
     </html>
@@ -231,6 +260,19 @@ export default function OpenStreetMap({
 		}
 	};
 
+	const handleLoadEnd = () => {
+		// WebViewの読み込み完了時に地図を強制的に再描画
+		if (webViewRef.current) {
+			webViewRef.current.postMessage(JSON.stringify({ type: "refresh" }));
+		}
+	};
+
+	const handleError = () => {
+		// エラー時に地図を再初期化
+		setMapKey((prev) => prev + 1);
+		setIsLoading(true);
+	};
+
 	return (
 		<View style={styles.container}>
 			{isLoading && (
@@ -240,10 +282,13 @@ export default function OpenStreetMap({
 				</View>
 			)}
 			<WebView
+				key={mapKey}
 				ref={webViewRef}
 				source={{ html: htmlContent }}
 				style={styles.webview}
 				onMessage={handleMessage}
+				onLoadEnd={handleLoadEnd}
+				onError={handleError}
 				javaScriptEnabled={true}
 				domStorageEnabled={true}
 				startInLoadingState={false}
@@ -251,6 +296,8 @@ export default function OpenStreetMap({
 				scrollEnabled={false}
 				showsHorizontalScrollIndicator={false}
 				showsVerticalScrollIndicator={false}
+				mixedContentMode="compatibility"
+				allowsInlineMediaPlayback={true}
 			/>
 		</View>
 	);
