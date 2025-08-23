@@ -1,5 +1,5 @@
-import React, { useState, useRef } from 'react';
-import { SafeAreaView, View, Text, TextInput, FlatList, Pressable, Platform } from 'react-native';
+import { useState, useRef } from 'react';
+import { SafeAreaView, View, Text, TextInput, FlatList, Pressable } from 'react-native';
 
 type Msg = { id: string; text: string; from: 'me' | 'bot'; createdAt: number };
 
