@@ -1,3 +1,4 @@
+import { API_BASE_URL } from "@env";
 import axios from "axios"; // axiosをインポート
 export type ApiResponse<T> = {
 	statusCode: number;
@@ -88,6 +89,4 @@ class UserApiClient {
 export default UserApiClient;
 
 // インスタンスをエクスポート
-export const userApiClient = new UserApiClient(
-	"https://13zsfidncd.execute-api.ap-northeast-1.amazonaws.com/dev",
-);
+export const userApiClient = new UserApiClient(API_BASE_URL);
