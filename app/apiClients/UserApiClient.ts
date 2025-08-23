@@ -89,5 +89,5 @@ export default UserApiClient;
 
 // インスタンスをエクスポート
 export const userApiClient = new UserApiClient(
-	"https://inyzdjntkl.execute-api.ap-northeast-1.amazonaws.com/dev",
+	"https://13zsfidncd.execute-api.ap-northeast-1.amazonaws.com/dev",
 );
