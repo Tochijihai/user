@@ -35,19 +35,24 @@ export default function OpinionScreen() {
 	const [sending, setSending] = useState(false);
 
 	const [markerCoords, setMarkerCoords] = useState<LatLng | null>(null);
+	const [isInitialized, setIsInitialized] = useState(false);
 
-	// 初期位置を取得してマーカーの座標を設定
+	// 初期位置を取得してマーカーの座標を設定（一度だけ実行）
 	useEffect(() => {
 		(async () => {
 			const { status } = await Location.requestForegroundPermissionsAsync();
 			if (status !== "granted") return;
 
-			setMarkerCoords({
-				latitude: location!.coords.latitude,
-				longitude: location!.coords.longitude,
-			});
+			// 初期化が未完了で、locationが存在する場合のみ設定
+			if (!isInitialized && location) {
+				setMarkerCoords({
+					latitude: location.coords.latitude,
+					longitude: location.coords.longitude,
+				});
+				setIsInitialized(true);
+			}
 		})();
-	}, [location]);
+	}, [location, isInitialized]); // isInitializedフラグで初期化を制御
 
 	// 意見を送信する関数
 	const handleSendOpinion = async () => {
