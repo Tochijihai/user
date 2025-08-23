@@ -254,6 +254,7 @@ export default function LocationMap() {
 						const post = posts.find((p) => p.id === markerId);
 						if (post) setSelected(post);
 					}}
+					disableMapClick={true}
 				/>
 
 				<TouchableOpacity
