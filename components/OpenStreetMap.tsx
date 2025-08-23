@@ -26,6 +26,7 @@ type Props = {
 	}>;
 	onMarkerPress?: (markerId: string) => void;
 	disableMapClick?: boolean;
+	currentLocation?: LatLng | null;
 };
 
 export default function OpenStreetMap({
@@ -36,6 +37,7 @@ export default function OpenStreetMap({
 	markers = [],
 	onMarkerPress,
 	disableMapClick = false,
+	currentLocation,
 }: Props) {
 	const webViewRef = useRef<WebView>(null);
 	const [isLoading, setIsLoading] = useState(true);
@@ -147,6 +149,26 @@ export default function OpenStreetMap({
           `,
 						)
 						.join("")}
+
+          // 現在地マーカーを追加
+          ${
+						currentLocation
+							? `
+            const currentLocationIcon = L.divIcon({
+              className: 'current-location-marker',
+              html: '<div style="background-color: red; width: 20px; height: 20px; border-radius: 50%; border: 3px solid white; box-shadow: 0 0 10px rgba(0,0,0,0.3);"></div>',
+              iconSize: [20, 20],
+              iconAnchor: [10, 10]
+            });
+            
+            const currentLocationMarker = L.marker([${currentLocation.latitude}, ${currentLocation.longitude}], {
+              icon: currentLocationIcon
+            }).addTo(map);
+            
+            currentLocationMarker.bindPopup('現在地');
+            `
+							: ""
+					}
 
           window.ReactNativeWebView.postMessage(JSON.stringify({
             type: 'mapReady'

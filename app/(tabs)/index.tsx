@@ -1,4 +1,5 @@
 import { FontAwesome } from "@expo/vector-icons";
+import { faker } from "@faker-js/faker/locale/ja";
 import * as Location from "expo-location";
 import { router } from "expo-router";
 import { useCallback, useEffect, useState } from "react";
@@ -6,6 +7,7 @@ import {
 	ActivityIndicator,
 	Dimensions,
 	FlatList,
+	Image,
 	KeyboardAvoidingView,
 	Platform,
 	Pressable,
@@ -82,7 +84,8 @@ export default function LocationMap() {
 					id: data.ID,
 					latitude: data.Coordinate.Latitude,
 					longitude: data.Coordinate.Longitude,
-					title: data.MailAddress,
+					// TODO: メールアドレスだったので仮で名前をランダム生成
+					title: faker.person.fullName(),
 					description: data.Opinion,
 				})) ?? [];
 			setPosts([...newSpots]);
@@ -102,7 +105,8 @@ export default function LocationMap() {
 				response.data?.map((data: ResponseComment) => ({
 					id: data.Id,
 					commentId: data.CommentID,
-					author: data?.Author ?? data.MailAddress,
+					// TODO: 仮で名前を自動生成
+					author: data?.Author ?? faker.person.fullName(),
 					comment: data.Comment,
 					createdAt: data.CreatedDateTime,
 				})) ?? [];
@@ -182,9 +186,11 @@ export default function LocationMap() {
 	const renderComment = ({ item }: { item: DisplayComment }) => (
 		<View key={item.commentId} style={styles.commentRow}>
 			<View style={styles.avatar}>
-				<Text style={{ color: "white", fontWeight: "600" }}>
-					{item.author.slice(0, 1)}
-				</Text>
+				{/* TODO: 仮で自動生成 */}
+				<Image
+					style={styles.avatar}
+					source={{ uri: faker.image.personPortrait() }}
+				/>
 			</View>
 			<View style={{ flex: 1, marginLeft: 8 }}>
 				<Text style={styles.commentAuthor}>{item.author}</Text>
@@ -254,6 +260,10 @@ export default function LocationMap() {
 						if (post) setSelected(post);
 					}}
 					disableMapClick={true}
+					currentLocation={{
+						latitude: location.coords.latitude,
+						longitude: location.coords.longitude,
+					}}
 				/>
 
 				<TouchableOpacity
