@@ -77,6 +77,7 @@ function LocationMap() {
 	const [commentsByPost, setCommentsByPost] = useState<
 		Record<string, DisplayComment[]>
 	>({});
+	const [mapKey, setMapKey] = useState(0);
 
 	const fetchOpinion = useCallback(async () => {
 		setLoading(true);
@@ -186,6 +187,8 @@ function LocationMap() {
 		if (shouldRefresh && location) {
 			fetchOpinion();
 			resetRefresh();
+			// 地図も更新
+			setMapKey((prev) => prev + 1);
 		}
 	}, [shouldRefresh, location, fetchOpinion, resetRefresh]);
 
@@ -257,6 +260,7 @@ function LocationMap() {
 		>
 			<View style={{ flex: 1 }}>
 				<OpenStreetMap
+					key={`main-map-${mapKey}-${location?.timestamp || 0}`}
 					markerCoords={null}
 					setMarkerCoords={() => {}}
 					initialRegion={{
