@@ -278,6 +278,17 @@ export default function LocationMap() {
 						<FontAwesome name="paper-plane" size={24} color="white" />
 					)}
 				</TouchableOpacity>
+				<TouchableOpacity
+					style={styles.chatButton}
+					onPress={() => router.push("/pages/chat")}
+					disabled={loading}
+				>
+					{loading ? (
+						<ActivityIndicator color="white" />
+					) : (
+						<FontAwesome name="comment" size={24} color="white" />
+					)}
+				</TouchableOpacity>
 
 				{selected && (
 					<View style={styles.card}>
@@ -388,7 +399,7 @@ const styles = StyleSheet.create({
 		alignItems: "flex-start",
 	},
 	avatar: {
-		backgroundColor: "#007AFF",
+		backgroundColor: "#17882e",
 		width: 32,
 		height: 32,
 		borderRadius: 16,
@@ -407,7 +418,7 @@ const styles = StyleSheet.create({
 		position: "absolute",
 		bottom: 30,
 		right: 20,
-		backgroundColor: "#007AFF",
+		backgroundColor: "#17882e",
 		width: 56,
 		height: 56,
 		borderRadius: 28,
@@ -422,7 +433,22 @@ const styles = StyleSheet.create({
 		position: "absolute",
 		bottom: 30 + 56 + 10,
 		right: 20,
-		backgroundColor: "#007AFF",
+		backgroundColor: "#17882e",
+		width: 56,
+		height: 56,
+		borderRadius: 28,
+		alignItems: "center",
+		justifyContent: "center",
+		elevation: 6,
+		shadowColor: "#000",
+		shadowOpacity: 0.3,
+		shadowRadius: 4,
+	},
+	chatButton: {
+		position: "absolute",
+		bottom: 30 + 56 + 10 + 56 + 10,
+		right: 20,
+		backgroundColor: "#17882e",
 		width: 56,
 		height: 56,
 		borderRadius: 28,
