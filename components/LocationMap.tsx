@@ -1,7 +1,7 @@
 import * as Location from "expo-location";
 import { useEffect, useState } from "react";
 import { ActivityIndicator, StyleSheet, Text, View } from "react-native";
-import { useLocationContext } from "@/app/conntexts/LocationContext";
+import { useLocationContext } from "@/app/contexts/LocationContext";
 import OpenStreetMap from "./OpenStreetMap";
 
 type LatLng = {
