@@ -15,7 +15,7 @@ import LocationMap from "@/components/LocationMap";
 import { Colors } from "@/constants/Colors"; // Colors.tsをインポート
 import { userInfo } from "@/testUserInfo";
 import { userApiClient } from "../apiClients/UserApiClient";
-import { useLocationContext } from "../conntexts/LocationContext";
+import { useLocationContext } from "../contexts/LocationContext";
 
 const Loading = () => (
 	<PaperProvider>

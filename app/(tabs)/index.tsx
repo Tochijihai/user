@@ -20,7 +20,7 @@ import {
 import { userInfo } from "@/testUserInfo";
 import OpenStreetMap from "../../components/OpenStreetMap";
 import { userApiClient } from "../apiClients/UserApiClient";
-import { useLocationContext } from "../conntexts/LocationContext";
+import { useLocationContext } from "../contexts/LocationContext";
 
 const windowHeight = Dimensions.get("window").height;
 
