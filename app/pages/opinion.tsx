@@ -104,7 +104,7 @@ export default function OpinionScreen() {
 	const DefaultView = () => (
 		<KeyboardAvoidingView
 			style={styles.container}
-			behavior={Platform.OS === "ios" ? "padding" : "padding"}
+			behavior={Platform.OS === "ios" ? "padding" : "height"}
 		>
 			<LocationMap
 				markerCoords={markerCoords}
@@ -157,9 +157,8 @@ const createStyles = (colors: any) =>
 			shadowRadius: 4,
 		},
 		formContainer: {
-			flex: 1,
-			margin: 16,
-			justifyContent: "center",
+			marginHorizontal: 16,
+			marginVertical: 12,
 			backgroundColor: colors.cardBackground,
 			borderRadius: 16,
 			elevation: 6,
