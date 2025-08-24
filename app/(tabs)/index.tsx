@@ -17,6 +17,8 @@ import {
 	TouchableOpacity,
 	View,
 } from "react-native";
+import { Colors } from "@/constants/Colors";
+import { useColorScheme } from "@/hooks/useColorScheme";
 import { userInfo } from "@/testUserInfo";
 import OpenStreetMap from "../../components/OpenStreetMap";
 import { userApiClient } from "../apiClients/UserApiClient";
@@ -67,6 +69,9 @@ type ReactionInfo = {
 };
 
 function LocationMap() {
+	const colorScheme = useColorScheme();
+	const colors = Colors[colorScheme ?? "light"];
+	const styles = createStyles(colors);
 	const { location, setLocation } = useLocationContext();
 	const { shouldRefresh, resetRefresh } = useOpinionContext();
 	const [posts, setPosts] = useState<Spot[]>([]);
@@ -332,12 +337,12 @@ function LocationMap() {
 							<Text style={{ marginLeft: 8 }}>
 								{reactionInfo?.ReactionCount}
 							</Text>
-							<Pressable
+							<TouchableOpacity
 								onPress={() => setSelected(null)}
-								style={{ marginLeft: "auto" }}
+								style={styles.closeButton}
 							>
-								<Text style={{ color: "blue" }}>閉じる</Text>
-							</Pressable>
+								<Text style={styles.closeButtonText}>閉じる</Text>
+							</TouchableOpacity>
 						</View>
 
 						<View style={styles.commentListContainer}>
@@ -363,30 +368,18 @@ function LocationMap() {
 							) : (
 								<Text style={{ color: "#666" }}>コメントはまだありません</Text>
 							)}
-							<View
-								style={{
-									flexDirection: "row",
-									alignItems: "center",
-									marginTop: 8,
-								}}
-							>
+							<View style={styles.inputContainer}>
 								<TextInput
-									style={{
-										flex: 1,
-										borderColor: "#ccc",
-										borderWidth: 1,
-										borderRadius: 4,
-										padding: 12,
-									}}
+									style={styles.textInput}
 									placeholder="コメントを入力..."
 									value={newComment}
 									onChangeText={setNewComment}
 								/>
 								<TouchableOpacity
 									onPress={handleCommentSubmit}
-									style={{ marginLeft: 8 }}
+									style={styles.sendButton}
 								>
-									<Text style={{ color: "blue" }}>送信</Text>
+									<Text style={styles.sendButtonText}>送信</Text>
 								</TouchableOpacity>
 							</View>
 						</View>
@@ -397,102 +390,171 @@ function LocationMap() {
 	);
 }
 
-const styles = StyleSheet.create({
-	center: { flex: 1, justifyContent: "center", alignItems: "center" },
-	card: {
-		position: "absolute",
-		bottom: 0,
-		width: Dimensions.get("window").width,
-		backgroundColor: "white",
-		padding: 16,
-		borderTopLeftRadius: 12,
-		borderTopRightRadius: 12,
-		shadowColor: "#000",
-		shadowOpacity: 0.2,
-		shadowRadius: 6,
-		elevation: 6,
-		maxHeight: windowHeight * 0.4,
-	},
-	row: { flexDirection: "row", alignItems: "center", marginTop: 8 },
-	button: { padding: 4 },
-	commentListContainer: {
-		marginTop: 12,
-		flex: 1,
-		maxHeight: windowHeight * 0.25,
-	},
-	commentHeader: {
-		fontWeight: "600",
-		marginBottom: 6,
-		fontSize: 16,
-	},
-	commentRow: {
-		flexDirection: "row",
-		paddingVertical: 6,
-		borderBottomColor: "#eee",
-		borderBottomWidth: 1,
-		alignItems: "flex-start",
-	},
-	avatar: {
-		backgroundColor: "#17882e",
-		width: 32,
-		height: 32,
-		borderRadius: 16,
-		alignItems: "center",
-		justifyContent: "center",
-	},
-	commentAuthor: {
-		fontWeight: "600",
-	},
-	timestamp: {
-		fontSize: 10,
-		color: "#888",
-		marginTop: 2,
-	},
-	refreshButton: {
-		position: "absolute",
-		bottom: 30,
-		right: 20,
-		backgroundColor: "#17882e",
-		width: 56,
-		height: 56,
-		borderRadius: 28,
-		alignItems: "center",
-		justifyContent: "center",
-		elevation: 6,
-		shadowColor: "#000",
-		shadowOpacity: 0.3,
-		shadowRadius: 4,
-	},
-	opinionButton: {
-		position: "absolute",
-		bottom: 30 + 56 + 10,
-		right: 20,
-		backgroundColor: "#17882e",
-		width: 56,
-		height: 56,
-		borderRadius: 28,
-		alignItems: "center",
-		justifyContent: "center",
-		elevation: 6,
-		shadowColor: "#000",
-		shadowOpacity: 0.3,
-		shadowRadius: 4,
-	},
-	chatButton: {
-		position: "absolute",
-		bottom: 30 + 56 + 10 + 56 + 10,
-		right: 20,
-		backgroundColor: "#17882e",
-		width: 56,
-		height: 56,
-		borderRadius: 28,
-		alignItems: "center",
-		justifyContent: "center",
-		elevation: 6,
-		shadowColor: "#000",
-		shadowOpacity: 0.3,
-		shadowRadius: 4,
-	},
-});
+// 東京都アプリスタイルのスタイルシート
+const createStyles = (colors: any) =>
+	StyleSheet.create({
+		center: {
+			flex: 1,
+			justifyContent: "center",
+			alignItems: "center",
+			backgroundColor: colors.tokyoLightGreen,
+		},
+		card: {
+			position: "absolute",
+			bottom: 0,
+			width: Dimensions.get("window").width,
+			backgroundColor: colors.cardBackground,
+			padding: 20,
+			borderTopLeftRadius: 20,
+			borderTopRightRadius: 20,
+			shadowColor: colors.shadowColor,
+			shadowOpacity: 0.15,
+			shadowRadius: 10,
+			elevation: 8,
+			maxHeight: windowHeight * 0.4,
+			borderTopWidth: 3,
+			borderTopColor: colors.tokyoGreen,
+		},
+		row: {
+			flexDirection: "row",
+			alignItems: "center",
+			marginTop: 12,
+			paddingBottom: 8,
+			borderBottomWidth: 1,
+			borderBottomColor: colors.tokyoLightGreen,
+		},
+		button: {
+			padding: 8,
+			borderRadius: 8,
+		},
+		commentListContainer: {
+			marginTop: 16,
+			flex: 1,
+			maxHeight: windowHeight * 0.25,
+		},
+		commentHeader: {
+			fontWeight: "700",
+			marginBottom: 12,
+			fontSize: 18,
+			color: colors.tokyoGreen,
+		},
+		commentRow: {
+			flexDirection: "row",
+			paddingVertical: 12,
+			borderBottomColor: colors.tokyoLightGreen,
+			borderBottomWidth: 1,
+			alignItems: "flex-start",
+		},
+		avatar: {
+			backgroundColor: colors.tokyoGreen,
+			width: 36,
+			height: 36,
+			borderRadius: 18,
+			alignItems: "center",
+			justifyContent: "center",
+		},
+		commentAuthor: {
+			fontWeight: "700",
+			color: colors.tokyoGreenDark,
+			fontSize: 14,
+		},
+		timestamp: {
+			fontSize: 11,
+			color: "#888",
+			marginTop: 4,
+		},
+		refreshButton: {
+			position: "absolute",
+			bottom: 30,
+			right: 20,
+			backgroundColor: colors.tokyoGreen,
+			width: 60,
+			height: 60,
+			borderRadius: 30,
+			alignItems: "center",
+			justifyContent: "center",
+			elevation: 8,
+			shadowColor: colors.shadowColor,
+			shadowOpacity: 0.25,
+			shadowRadius: 6,
+			borderWidth: 2,
+			borderColor: "white",
+		},
+		opinionButton: {
+			position: "absolute",
+			bottom: 30 + 60 + 15,
+			right: 20,
+			backgroundColor: colors.tokyoGreenLight,
+			width: 60,
+			height: 60,
+			borderRadius: 30,
+			alignItems: "center",
+			justifyContent: "center",
+			elevation: 8,
+			shadowColor: colors.shadowColor,
+			shadowOpacity: 0.25,
+			shadowRadius: 6,
+			borderWidth: 2,
+			borderColor: "white",
+		},
+		chatButton: {
+			position: "absolute",
+			bottom: 30 + 60 + 15 + 60 + 15,
+			right: 20,
+			backgroundColor: colors.tokyoGreenDark,
+			width: 60,
+			height: 60,
+			borderRadius: 30,
+			alignItems: "center",
+			justifyContent: "center",
+			elevation: 8,
+			shadowColor: colors.shadowColor,
+			shadowOpacity: 0.25,
+			shadowRadius: 6,
+			borderWidth: 2,
+			borderColor: "white",
+		},
+		inputContainer: {
+			flexDirection: "row",
+			alignItems: "center",
+			marginTop: 12,
+			backgroundColor: colors.tokyoLightGreen,
+			borderRadius: 12,
+			padding: 4,
+		},
+		textInput: {
+			flex: 1,
+			borderColor: colors.tokyoGreen,
+			borderWidth: 1,
+			borderRadius: 8,
+			padding: 12,
+			backgroundColor: "white",
+			fontSize: 14,
+		},
+		sendButton: {
+			marginLeft: 8,
+			backgroundColor: colors.tokyoGreen,
+			paddingHorizontal: 16,
+			paddingVertical: 12,
+			borderRadius: 8,
+		},
+		sendButtonText: {
+			color: "white",
+			fontWeight: "600",
+			fontSize: 14,
+		},
+		closeButton: {
+			marginLeft: "auto",
+			backgroundColor: colors.tokyoLightGreen,
+			paddingHorizontal: 12,
+			paddingVertical: 6,
+			borderRadius: 6,
+		},
+		closeButtonText: {
+			color: colors.tokyoGreenDark,
+			fontWeight: "600",
+			fontSize: 14,
+		},
+	});
 
 export default React.memo(LocationMap);

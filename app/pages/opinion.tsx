@@ -13,21 +13,36 @@ import {
 } from "react-native-paper";
 import LocationMap from "@/components/LocationMap";
 import { Colors } from "@/constants/Colors";
+import { useColorScheme } from "@/hooks/useColorScheme";
 import { userInfo } from "@/testUserInfo";
 import { userApiClient } from "../apiClients/UserApiClient";
 import { useLocationContext } from "../contexts/LocationContext";
 import { useOpinionContext } from "../contexts/OpinionContext";
 
-const Loading = () => (
-	<PaperProvider>
-		<View style={styles.center}>
-			<ActivityIndicator animating size="large" />
-			<Text>位置情報を取得中...</Text>
-		</View>
-	</PaperProvider>
-);
+const Loading = () => {
+	const colorScheme = useColorScheme();
+	const colors = Colors[colorScheme ?? "light"];
+	const styles = createStyles(colors);
+
+	return (
+		<PaperProvider>
+			<View style={styles.center}>
+				<ActivityIndicator animating size="large" color={colors.tokyoGreen} />
+				<Text
+					style={{ color: colors.tokyoGreenDark, fontSize: 16, marginTop: 12 }}
+				>
+					位置情報を取得中...
+				</Text>
+			</View>
+		</PaperProvider>
+	);
+};
 
 export default function OpinionScreen() {
+	const colorScheme = useColorScheme();
+	const colors = Colors[colorScheme ?? "light"];
+	const styles = createStyles(colors);
+
 	const { location, setLocation } = useLocationContext();
 	const { triggerRefresh } = useOpinionContext();
 
@@ -124,31 +139,52 @@ export default function OpinionScreen() {
 	return <PaperProvider>{!location ? Loading() : DefaultView()}</PaperProvider>;
 }
 
-const styles = StyleSheet.create({
-	container: {
-		flex: 1,
-		backgroundColor: Colors.light.background, // 背景色を設定
-	},
-	mapContainer: { flex: 2 },
-	formContainer: {
-		flex: 1,
-		margin: 16,
-		justifyContent: "center",
-		backgroundColor: Colors.light.background, // フォームの背景色を設定
-	},
-	input: {
-		marginBottom: 16,
-		height: 100,
-		textAlignVertical: "top",
-		color: Colors.light.text, // テキスト色を設定
-	},
-	button: {
-		marginTop: 8,
-		backgroundColor: Colors.light.tint, // ボタンの色を設定
-	},
-	center: {
-		flex: 1,
-		justifyContent: "center",
-		alignItems: "center",
-	},
-});
+// 東京都アプリスタイルのスタイルシート
+const createStyles = (colors: any) =>
+	StyleSheet.create({
+		container: {
+			flex: 1,
+			backgroundColor: colors.tokyoLightGreen,
+		},
+		mapContainer: {
+			flex: 2,
+			borderRadius: 12,
+			margin: 8,
+			overflow: "hidden",
+			elevation: 4,
+			shadowColor: colors.shadowColor,
+			shadowOpacity: 0.1,
+			shadowRadius: 4,
+		},
+		formContainer: {
+			flex: 1,
+			margin: 16,
+			justifyContent: "center",
+			backgroundColor: colors.cardBackground,
+			borderRadius: 16,
+			elevation: 6,
+			shadowColor: colors.shadowColor,
+			shadowOpacity: 0.15,
+			shadowRadius: 8,
+			borderTopWidth: 3,
+			borderTopColor: colors.tokyoGreen,
+		},
+		input: {
+			marginBottom: 20,
+			height: 120,
+			textAlignVertical: "top",
+			backgroundColor: "white",
+		},
+		button: {
+			marginTop: 12,
+			backgroundColor: colors.tokyoGreen,
+			borderRadius: 8,
+			paddingVertical: 4,
+		},
+		center: {
+			flex: 1,
+			justifyContent: "center",
+			alignItems: "center",
+			backgroundColor: colors.tokyoLightGreen,
+		},
+	});
