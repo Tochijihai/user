@@ -157,9 +157,8 @@ const createStyles = (colors: any) =>
 			shadowRadius: 4,
 		},
 		formContainer: {
-			flex: 1,
-			margin: 16,
-			justifyContent: "center",
+			marginHorizontal: 18,
+			marginVertical: 10,
 			backgroundColor: colors.cardBackground,
 			borderRadius: 16,
 			elevation: 6,
