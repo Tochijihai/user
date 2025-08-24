@@ -17,6 +17,7 @@ import {
 	TouchableOpacity,
 	View,
 } from "react-native";
+import { Snackbar } from "react-native-paper";
 import { Colors } from "@/constants/Colors";
 import { useColorScheme } from "@/hooks/useColorScheme";
 import { userInfo } from "@/testUserInfo";
@@ -73,7 +74,8 @@ function LocationMap() {
 	const colors = Colors[colorScheme ?? "light"];
 	const styles = createStyles(colors);
 	const { location, setLocation } = useLocationContext();
-	const { shouldRefresh, resetRefresh } = useOpinionContext();
+	const { shouldRefresh, resetRefresh, successMessage, setSuccessMessage } =
+		useOpinionContext();
 	const [posts, setPosts] = useState<Spot[]>([]);
 	const [selected, setSelected] = useState<Spot | null>(null);
 	const [loading, setLoading] = useState(false);
@@ -196,6 +198,17 @@ function LocationMap() {
 			setMapKey((prev) => prev + 1);
 		}
 	}, [shouldRefresh, location, fetchOpinion, resetRefresh]);
+
+	// 成功メッセージの表示
+	useEffect(() => {
+		if (successMessage) {
+			// 少し遅延してからsnackbarを表示
+			const timer = setTimeout(() => {
+				setSuccessMessage(null);
+			}, 3000);
+			return () => clearTimeout(timer);
+		}
+	}, [successMessage, setSuccessMessage]);
 
 	useEffect(() => {
 		if (selected?.id) {
@@ -385,6 +398,17 @@ function LocationMap() {
 						</View>
 					</View>
 				)}
+
+				<Snackbar
+					visible={!!successMessage}
+					onDismiss={() => setSuccessMessage(null)}
+					duration={3000}
+					style={{
+						backgroundColor: colors.tokyoGreen,
+					}}
+				>
+					{successMessage || ""}
+				</Snackbar>
 			</View>
 		</KeyboardAvoidingView>
 	);
