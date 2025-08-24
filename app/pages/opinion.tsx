@@ -8,6 +8,7 @@ import {
 	Button,
 	Card,
 	Provider as PaperProvider,
+	Snackbar,
 	Text,
 	TextInput,
 } from "react-native-paper";
@@ -44,10 +45,15 @@ export default function OpinionScreen() {
 	const styles = createStyles(colors);
 
 	const { location, setLocation } = useLocationContext();
-	const { triggerRefresh } = useOpinionContext();
+	const { triggerRefresh, setSuccessMessage } = useOpinionContext();
 
 	const [feedback, setFeedback] = useState("");
 	const [sending, setSending] = useState(false);
+	const [snackbarVisible, setSnackbarVisible] = useState(false);
+	const [snackbarMessage, setSnackbarMessage] = useState("");
+	const [snackbarType, setSnackbarType] = useState<"success" | "error">(
+		"success",
+	);
 
 	const [markerCoords, setMarkerCoords] = useState<LatLng | null>(null);
 	const [isInitialized, setIsInitialized] = useState(false);
@@ -72,7 +78,9 @@ export default function OpinionScreen() {
 	// 意見を送信する関数
 	const handleSendOpinion = async () => {
 		if (!markerCoords) {
-			alert("位置情報が未設定です");
+			setSnackbarMessage("位置情報が未設定です");
+			setSnackbarType("error");
+			setSnackbarVisible(true);
 			return;
 		}
 
@@ -91,11 +99,14 @@ export default function OpinionScreen() {
 			setFeedback("");
 			// メイン画面の意見一覧更新をトリガー
 			triggerRefresh();
-			// 投稿成功のフィードバックを表示してから前の画面に戻る
-			alert("意見を送信しました！");
+			// 成功メッセージをcontextに設定
+			setSuccessMessage("意見を送信しました！");
+			// 前の画面に戻る
 			router.back();
 		} catch (error) {
-			alert(`意見の送信に失敗しました。${error}`);
+			setSnackbarMessage(`意見の送信に失敗しました。${error}`);
+			setSnackbarType("error");
+			setSnackbarVisible(true);
 		} finally {
 			setSending(false);
 		}
@@ -133,6 +144,18 @@ export default function OpinionScreen() {
 					</Button>
 				</Card.Content>
 			</Card>
+
+			<Snackbar
+				visible={snackbarVisible}
+				onDismiss={() => setSnackbarVisible(false)}
+				duration={3000}
+				style={{
+					backgroundColor:
+						snackbarType === "success" ? colors.tokyoGreen : "#f44336",
+				}}
+			>
+				{snackbarMessage}
+			</Snackbar>
 		</KeyboardAvoidingView>
 	);
 

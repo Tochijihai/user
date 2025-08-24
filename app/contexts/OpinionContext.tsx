@@ -4,12 +4,15 @@ interface OpinionContextType {
 	shouldRefresh: boolean;
 	triggerRefresh: () => void;
 	resetRefresh: () => void;
+	successMessage: string | null;
+	setSuccessMessage: (message: string | null) => void;
 }
 
 const OpinionContext = createContext<OpinionContextType | undefined>(undefined);
 
 export function OpinionProvider({ children }: { children: ReactNode }) {
 	const [shouldRefresh, setShouldRefresh] = useState(false);
+	const [successMessage, setSuccessMessage] = useState<string | null>(null);
 
 	const triggerRefresh = () => {
 		setShouldRefresh(true);
@@ -21,7 +24,13 @@ export function OpinionProvider({ children }: { children: ReactNode }) {
 
 	return (
 		<OpinionContext.Provider
-			value={{ shouldRefresh, triggerRefresh, resetRefresh }}
+			value={{
+				shouldRefresh,
+				triggerRefresh,
+				resetRefresh,
+				successMessage,
+				setSuccessMessage,
+			}}
 		>
 			{children}
 		</OpinionContext.Provider>
